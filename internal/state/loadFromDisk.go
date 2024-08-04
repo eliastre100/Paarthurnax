@@ -1,6 +1,7 @@
 package state
 
 import (
+	"Paarthurnax/internal/state/translationFile"
 	"Paarthurnax/internal/translation"
 	"crypto/sha1"
 	"encoding/hex"
@@ -25,7 +26,7 @@ func LoadFromDisk(path string, verbose bool) (*State, error) {
 				return errors.New(fmt.Sprintf("Failed to load translation: %s", err))
 			}
 
-			state.Files = append(state.Files, TranslationFile{
+			state.Files = append(state.Files, translationFile.TranslationFile{
 				Path:           path,
 				SegmentsHashes: HashTranslation(t.FlattenedSegments()),
 			})

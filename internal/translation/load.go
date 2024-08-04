@@ -24,7 +24,7 @@ func Load(path string) (*TranslationFile, error) {
 	}
 
 	locale := utils.MapKeys(yamlData)[0]
-	file := TranslationFile{path: path, locale: locale, segments: yamlData[locale].(map[string]interface{})}
+	file := TranslationFile{Path: path, Locale: locale, Segments: yamlData[locale].(map[string]interface{})}
 
 	return &file, nil
 }

@@ -1,10 +1,7 @@
 package state
 
-type State struct {
-	Files []TranslationFile
-}
+import "Paarthurnax/internal/state/translationFile"
 
-type TranslationFile struct {
-	Path           string
-	SegmentsHashes map[string]string // Key: sha1
+type State struct {
+	Files []translationFile.TranslationFile
 }

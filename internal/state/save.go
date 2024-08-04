@@ -1,7 +1,6 @@
 package state
 
 import (
-	"fmt"
 	"github.com/pelletier/go-toml/v2"
 	"os"
 )
@@ -15,7 +14,6 @@ func (state *State) Save() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%v\n", state)
 	if _, err = f.Write(encoded); err != nil {
 		return err
 	}

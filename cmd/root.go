@@ -16,4 +16,5 @@ translation of Rails project`,
 
 func init() {
 	RootCmd.AddCommand(InitCmd)
+	RootCmd.AddCommand(TranslateCmd)
 }

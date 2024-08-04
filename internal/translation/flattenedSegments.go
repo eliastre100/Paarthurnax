@@ -1,7 +1,7 @@
 package translation
 
 func (translation *TranslationFile) FlattenedSegments() map[string]string {
-	return extractFlattenedSegments(translation.segments)
+	return extractFlattenedSegments(translation.Segments)
 }
 
 func extractFlattenedSegments(m map[string]interface{}) map[string]string {

@@ -13,3 +13,7 @@ translation of Rails project`,
 		println("Paarthurnax version 0.1")
 	},
 }
+
+func init() {
+	RootCmd.AddCommand(InitCmd)
+}

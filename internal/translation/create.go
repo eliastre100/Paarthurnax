@@ -2,7 +2,6 @@ package translation
 
 import (
 	"errors"
-	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
@@ -19,7 +18,6 @@ func Create(path string) (*TranslationFile, error) {
 		return nil, errors.New("Unable to prepare new translation file preprocessing: " + err.Error())
 	}
 
-	fmt.Printf("%s\n", filepath.Base(path))
 	matches := r.FindStringSubmatch(filepath.Base(path))
 	if matches[1] == "" {
 		return nil, errors.New(path + " is an invalid translation file path")

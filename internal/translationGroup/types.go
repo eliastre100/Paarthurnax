@@ -4,7 +4,7 @@ import (
 	"Paarthurnax/internal/translation"
 )
 
-var DestLocales = [...]string{"en"} //, "es", "it", "de"}
+var DestLocales = [...]string{"en", "es", "it", "de", "hu", "pt", "pl", "ro", "uk"}
 
 type TranslationGroup struct {
 	Path   string

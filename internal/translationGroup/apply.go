@@ -6,6 +6,7 @@ import (
 	"Paarthurnax/pkg/deepl"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -67,15 +68,17 @@ func handlePluralSegment(part string, group *TranslationGroup, change *translati
 
 		for _, file := range group.files {
 			affectedKeys := determineAffectedKeysIn(part, file.Locale)
-			for _, key := range affectedKeys {
-				// for each key transform the count with the language count then convert back to count
-				translation, err := translator.Translate(value, "fr", file.Locale)
+			for _, definition := range affectedKeys {
+				localValue := strings.ReplaceAll(value, "%{count}", strconv.Itoa(int(definition.tip)))
+				translation, err := translator.Translate(localValue, "fr", file.Locale)
 				if err != nil {
 					return errors.New("Unable to translate the value of the source segment " + change.Path + ": " + err.Error())
 				}
+				translation = strings.ReplaceAll(translation, strconv.Itoa(int(definition.tip)), "%{count}")
 
 				pathParts := strings.Split(change.Path, ".")
-				localKey := strings.Join(append(pathParts[:len(pathParts)-1], key), ".")
+				localKey := strings.Join(append(pathParts[:len(pathParts)-1], definition.key), ".")
+				// TODO: Add check variables all presents
 				if err = file.SetSegmentValueAt(localKey, translation); err != nil {
 					return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 				}
@@ -87,40 +90,200 @@ func handlePluralSegment(part string, group *TranslationGroup, change *translati
 	return nil
 }
 
-func determineAffectedKeysIn(part string, locale string) []string {
-	keysDirections := map[string]map[string][]string{
-		"zero": map[string][]string{
-			"en": []string{"zero"},
-			"es": []string{"zero"},
-			"it": []string{"zero"},
-			"de": []string{"zero"},
-			"hu": []string{"zero"},
-			"pt": []string{"zero"},
-			"pl": []string{"zero"},
-			"ro": []string{"zero"},
-			"uk": []string{"zero"},
+type pluralDefinition struct {
+	key string
+	tip int32
+}
+
+func determineAffectedKeysIn(part string, locale string) []pluralDefinition {
+	keysDirections := map[string]map[string][]pluralDefinition{
+		"zero": {
+			"en": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"es": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"it": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"de": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"hu": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"pt": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"pl": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"ro": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
+			"uk": {
+				{
+					key: "zero",
+					tip: 0,
+				},
+			},
 		},
-		"one": map[string][]string{
-			"en": []string{"one"},
-			"es": []string{"one"},
-			"it": []string{"one"},
-			"de": []string{"one"},
-			"hu": []string{"one"},
-			"pt": []string{"one"},
-			"pl": []string{"one"},
-			"ro": []string{"one"},
-			"uk": []string{"one"},
+		"one": {
+			"en": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"es": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"it": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"de": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"hu": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"pt": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"pl": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"ro": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
+			"uk": {
+				{
+					key: "one",
+					tip: 1,
+				},
+			},
 		},
-		"other": map[string][]string{
-			"en": []string{"other"},
-			"es": []string{"other"},
-			"it": []string{"other"},
-			"de": []string{"other"},
-			"hu": []string{"other"},
-			"pt": []string{"other"},
-			"pl": []string{"few", "many", "other"}, // https://github.com/svenfuchs/rails-i18n/blob/master/rails/pluralization/pl.rb
-			"ro": []string{"few", "other"},         // https://github.com/svenfuchs/rails-i18n/blob/master/lib/rails_i18n/common_pluralizations/romanian.rb#L5
-			"uk": []string{"few", "many", "other"}, // https://github.com/svenfuchs/rails-i18n/blob/master/lib/rails_i18n/common_pluralizations/east_slavic.rb#L8
+		"other": {
+			"en": {
+				{
+					key: "other",
+					tip: 2,
+				},
+			},
+			"es": {
+				{
+					key: "other",
+					tip: 2,
+				},
+			},
+			"it": {
+				{
+					key: "other",
+					tip: 2,
+				},
+			},
+			"de": {
+				{
+					key: "other",
+					tip: 2,
+				},
+			},
+			"hu": {
+				{
+					key: "other",
+					tip: 2,
+				},
+			},
+			"pt": {
+				{
+					key: "other",
+					tip: 2,
+				},
+			},
+			"pl": {
+				{
+					key: "few",
+					tip: 2,
+				},
+				{
+					key: "many",
+					tip: 11,
+				},
+				{
+					key: "other",
+					tip: 2, // No value match
+				},
+			}, // https://github.com/svenfuchs/rails-i18n/blob/master/rails/pluralization/pl.rb
+			"ro": {
+				{
+					key: "few",
+					tip: 2,
+				},
+				{
+					key: "other",
+					tip: 20,
+				},
+			}, // https://github.com/svenfuchs/rails-i18n/blob/master/lib/rails_i18n/common_pluralizations/romanian.rb#L5
+			"uk": {
+				{
+					key: "few",
+					tip: 2,
+				},
+				{
+					key: "many",
+					tip: 20,
+				},
+				{
+					key: "other",
+					tip: 11,
+				},
+			}, // https://github.com/svenfuchs/rails-i18n/blob/master/lib/rails_i18n/common_pluralizations/east_slavic.rb#L8
 		},
 	}
 

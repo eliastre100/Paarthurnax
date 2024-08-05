@@ -38,37 +38,44 @@ func (group *TranslationGroup) Apply(changes []translationFile.Change) error {
 }
 
 func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Change, translator *deepl.Deepl) error {
-	if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
-		value, err := group.source.GetSegmentValueAt(change.Path)
-		if err != nil {
-			return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
-		}
-		for _, file := range group.files {
+	for _, file := range group.files {
+		if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
+			value, err := group.source.GetSegmentValueAt(change.Path)
+			if err != nil {
+				return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
+			}
 			translation, err := translator.Translate(value, "fr", file.Locale)
 			if err != nil {
 				return errors.New("Unable to translate the value of the source segment " + change.Path + ": " + err.Error())
 			}
 
+			// TODO: Add check variables all presents
+
 			if err = file.SetSegmentValueAt(change.Path, translation); err != nil {
 				return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 			}
+		} else if change.Kind == translationFile.Removed {
+			if err := file.RemoveSegmentAt(change.Path); err != nil {
+				return errors.New("Unable to remove segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
+			}
 		}
-	} else if change.Kind == translationFile.Removed {
-		// TODO: remove key
 	}
 	return nil
 }
 
 func handlePluralSegment(part string, group *TranslationGroup, change *translationFile.Change, translator *deepl.Deepl) error {
-	if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
-		value, err := group.source.GetSegmentValueAt(change.Path)
-		if err != nil {
-			return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
-		}
+	for _, file := range group.files {
+		affectedKeys := determineAffectedKeysIn(part, file.Locale)
+		for _, definition := range affectedKeys {
+			pathParts := strings.Split(change.Path, ".")
+			localKey := strings.Join(append(pathParts[:len(pathParts)-1], definition.key), ".")
 
-		for _, file := range group.files {
-			affectedKeys := determineAffectedKeysIn(part, file.Locale)
-			for _, definition := range affectedKeys {
+			if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
+				value, err := group.source.GetSegmentValueAt(change.Path)
+				if err != nil {
+					return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
+				}
+
 				localValue := strings.ReplaceAll(value, "%{count}", strconv.Itoa(int(definition.tip)))
 				translation, err := translator.Translate(localValue, "fr", file.Locale)
 				if err != nil {
@@ -76,16 +83,16 @@ func handlePluralSegment(part string, group *TranslationGroup, change *translati
 				}
 				translation = strings.ReplaceAll(translation, strconv.Itoa(int(definition.tip)), "%{count}")
 
-				pathParts := strings.Split(change.Path, ".")
-				localKey := strings.Join(append(pathParts[:len(pathParts)-1], definition.key), ".")
 				// TODO: Add check variables all presents
 				if err = file.SetSegmentValueAt(localKey, translation); err != nil {
 					return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 				}
+			} else if change.Kind == translationFile.Removed {
+				if err := file.RemoveSegmentAt(localKey); err != nil {
+					return errors.New("Unable to remove segment " + localKey + " in locale " + file.Locale + ": " + err.Error())
+				}
 			}
 		}
-	} else if change.Kind == translationFile.Removed {
-		// TODO: remove key
 	}
 	return nil
 }

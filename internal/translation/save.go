@@ -7,7 +7,7 @@ import (
 )
 
 func (translation *TranslationFile) Save() error {
-	f, err := os.OpenFile(translation.Path, os.O_WRONLY, os.ModeAppend)
+	f, err := os.OpenFile(translation.Path, os.O_WRONLY|os.O_TRUNC, os.ModeAppend)
 	if err != nil {
 		return errors.New("Unable to open translation file: " + err.Error())
 	}

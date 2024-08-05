@@ -41,6 +41,19 @@ var TranslateCmd = &cobra.Command{
 			}
 		}
 
+		log.Println("Cleaning up removed files...")
+		for _, pFile := range pState.Files {
+			if nState.GetFile(pFile.Path) == nil {
+				log.Println("Cleaning up translation of", pFile.Path)
+				if errors := translationGroup.Cleanup(pFile.Path); len(errors) != 0 {
+					log.Println("Unable some translation files:")
+					for _, err := range errors {
+						log.Println(err)
+					}
+				}
+			}
+		}
+
 		log.Println("Persisting new state...")
 		if err := nState.Save(); err != nil {
 			log.Fatal("Failed to persist new state: " + err.Error())

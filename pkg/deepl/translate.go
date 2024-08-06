@@ -13,6 +13,7 @@ type translationRequest struct {
 	Text           []string `json:"text"`
 	SourceLanguage string   `json:"source_lang"`
 	SargetLanguage string   `json:"target_lang"`
+	TagHandling    string   `json:"tag_handling"`
 }
 
 type translationResponse struct {
@@ -23,7 +24,7 @@ type translationResponse struct {
 
 func (client *Deepl) Translate(text string, source string, destination string) (string, error) {
 	url := fmt.Sprintf("https://%s/v2/translate", client.domain)
-	request, err := json.Marshal(&translationRequest{Text: []string{text}, SourceLanguage: source, SargetLanguage: destination})
+	request, err := json.Marshal(&translationRequest{Text: []string{text}, SourceLanguage: source, SargetLanguage: destination, TagHandling: "html"})
 	if err != nil {
 		return "", errors.New("Unable to create translation request: " + err.Error())
 	}

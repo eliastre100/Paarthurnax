@@ -5,7 +5,9 @@ import (
 	"Paarthurnax/internal/utils"
 	"Paarthurnax/pkg/deepl"
 	"errors"
+	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -37,6 +39,26 @@ func (group *TranslationGroup) Apply(changes []translationFile.Change) error {
 	return nil
 }
 
+func prepareForTranslation(text string) (string, map[string]string, error) {
+	ctx := make(map[string]string)
+	r, err := regexp.Compile("%{(?P<variable>[a-zA-Z_ -]+)}")
+	if err != nil {
+		return "", nil, errors.New("Unable to prepare variable extraction: " + err.Error())
+	}
+	for _, variable := range r.FindAllStringSubmatch(text, -1) {
+		ctx[variable[1]] = "<span translate=\"no\">" + variable[1] + "</span>"
+		text = strings.Replace(text, "%{"+variable[1]+"}", ctx[variable[1]], -1)
+	}
+	return text, ctx, nil
+}
+
+func revertTranslationPreparation(text string, ctx map[string]string) (string, error) {
+	for value, placeholder := range ctx {
+		text = strings.Replace(text, placeholder, "%{"+value+"}", -1)
+	}
+	return text, nil
+}
+
 func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Change, translator *deepl.Deepl) error {
 	for _, file := range group.files {
 		if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
@@ -44,12 +66,22 @@ func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Ch
 			if err != nil {
 				return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
 			}
-			translation, err := translator.Translate(value, "fr", file.Locale)
+			valueForTranslation, ctx, err := prepareForTranslation(value)
+			if err != nil {
+				return errors.New("Unable to prepare for translation " + change.Path + ": " + err.Error())
+			}
+			translation, err := translator.Translate(valueForTranslation, "fr", file.Locale)
 			if err != nil {
 				return errors.New("Unable to translate the value of the source segment " + change.Path + ": " + err.Error())
 			}
+			translation, err = revertTranslationPreparation(translation, ctx)
+			if err != nil {
+				return errors.New("Unable to revert translation preparation for " + change.Path + ": " + err.Error())
+			}
 
-			// TODO: Add check variables all presents
+			if err = checkVariableEquity(value, translation); err != nil {
+				return errors.New("The translation does not contain the required variables: " + err.Error())
+			}
 
 			if err = file.SetSegmentValueAt(change.Path, translation); err != nil {
 				return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
@@ -77,13 +109,24 @@ func handlePluralSegment(part string, group *TranslationGroup, change *translati
 				}
 
 				localValue := strings.ReplaceAll(value, "%{count}", strconv.Itoa(int(definition.tip)))
-				translation, err := translator.Translate(localValue, "fr", file.Locale)
+				valueForTranslation, ctx, err := prepareForTranslation(localValue)
+				if err != nil {
+					return errors.New("Unable to prepare for translation " + change.Path + ": " + err.Error())
+				}
+				translation, err := translator.Translate(valueForTranslation, "fr", file.Locale)
 				if err != nil {
 					return errors.New("Unable to translate the value of the source segment " + change.Path + ": " + err.Error())
 				}
+				translation, err = revertTranslationPreparation(translation, ctx)
+				if err != nil {
+					return errors.New("Unable to revert translation preparation for " + change.Path + ": " + err.Error())
+				}
 				translation = strings.ReplaceAll(translation, strconv.Itoa(int(definition.tip)), "%{count}")
 
-				// TODO: Add check variables all presents
+				if err = checkVariableEquity(value, translation); err != nil {
+					return errors.New("The translation does not contain the required variables: " + err.Error())
+				}
+
 				if err = file.SetSegmentValueAt(localKey, translation); err != nil {
 					return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 				}
@@ -295,4 +338,24 @@ func determineAffectedKeysIn(part string, locale string) []pluralDefinition {
 	}
 
 	return keysDirections[part][locale]
+}
+
+func checkVariableEquity(a string, b string) error {
+	r, err := regexp.Compile("(?P<variable>%{[a-zA-Z_ -]+})")
+	if err != nil {
+		return errors.New("Unable to prepare variable check: " + err.Error())
+	}
+	aResults := r.FindAllStringSubmatch(a, -1)
+
+	var bResults []string
+	for _, match := range r.FindAllStringSubmatch(b, -1) {
+		bResults = append(bResults, match[1])
+	}
+
+	for _, variable := range aResults {
+		if !utils.Includes(variable[1], bResults) {
+			return errors.New(fmt.Sprintf("'%s' is not present in '%s'", variable[1], b))
+		}
+	}
+	return nil
 }

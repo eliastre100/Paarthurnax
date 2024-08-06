@@ -11,19 +11,17 @@ func (translation *TranslationFile) Save() error {
 	if err != nil {
 		return errors.New("Unable to open translation file: " + err.Error())
 	}
+	defer f.Close()
 
 	yamlData := make(map[string]interface{})
 	yamlData[translation.Locale] = translation.Segments
 
-	data, err := yaml.Marshal(yamlData)
-	if err != nil {
-		return errors.New("Unable to serialize translation file: " + err.Error())
-	}
-	if _, err = f.Write(data); err != nil {
+	yamlEncoder := yaml.NewEncoder(f)
+	yamlEncoder.SetIndent(2)
+	defer yamlEncoder.Close()
+
+	if err = yamlEncoder.Encode(yamlData); err != nil {
 		return errors.New("Unable to write translation file: " + err.Error())
-	}
-	if err = f.Close(); err != nil {
-		return errors.New("Unable to close translation file properly: " + err.Error())
 	}
 	return nil
 }

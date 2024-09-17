@@ -26,9 +26,10 @@ var NormalizeCmd = &cobra.Command{
 			log.Println(fmt.Sprintf("Processing %s...", nFile.Path))
 
 			for _, locale := range translationGroup.DestLocales {
-				file, err := translation.LoadOrCreate(strings.Replace(nFile.Path, "fr.yml", locale+".yml", 1))
+				path := strings.Replace(nFile.Path, "fr.yml", locale+".yml", 1)
+				file, err := translation.LoadOrCreate(path)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatal(fmt.Sprintf("%s: %s", path, err.Error()))
 				}
 				if err = file.Save(); err != nil {
 					log.Fatal(err)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- DeepL 529 response in case of too many requests does not fails and retry with backoff
+
 ## [0.1.1] - 2024-09-17
 
 ### Added

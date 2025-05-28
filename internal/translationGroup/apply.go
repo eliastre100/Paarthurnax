@@ -13,7 +13,7 @@ import (
 )
 
 func (group *TranslationGroup) Apply(changes []translationFile.Change) error {
-	translator, err := deepl.New(os.Getenv("DEEPL_API_KEY"), "api-free.deepl.com")
+	translator, err := deepl.NewClient(os.Getenv("DEEPL_API_KEY"), deepl.DeepLDomainFree)
 	if err != nil {
 		return errors.New("Unable to initialize the translation engine: " + err.Error())
 	}
@@ -59,7 +59,7 @@ func revertTranslationPreparation(text string, ctx map[string]string) (string, e
 	return text, nil
 }
 
-func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Change, translator *deepl.Deepl) error {
+func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Change, translator *deepl.Client) error {
 	for _, file := range group.files {
 		if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
 			value, err := group.source.GetSegmentValueAt(change.Path)
@@ -95,7 +95,7 @@ func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Ch
 	return nil
 }
 
-func handlePluralSegment(part string, group *TranslationGroup, change *translationFile.Change, translator *deepl.Deepl) error {
+func handlePluralSegment(part string, group *TranslationGroup, change *translationFile.Change, translator *deepl.Client) error {
 	for _, file := range group.files {
 		affectedKeys := determineAffectedKeysIn(part, file.Locale)
 		for _, definition := range affectedKeys {
@@ -121,7 +121,7 @@ func handlePluralSegment(part string, group *TranslationGroup, change *translati
 				if err != nil {
 					return errors.New("Unable to revert translation preparation for " + change.Path + ": " + err.Error())
 				}
-				translation = strings.ReplaceAll(translation, strconv.Itoa(int(definition.tip)), "%{count}")
+				translation = strings.ReplaceAll(translation, strconv.Itoa(int(definition.tip)), "%{count}") // FIXME: wrong ! if it is not a count but fixed value it would create a var that is not present in the source
 
 				if err = checkVariableEquity(value, translation); err != nil {
 					return errors.New("The translation does not contain the required variables: " + err.Error())

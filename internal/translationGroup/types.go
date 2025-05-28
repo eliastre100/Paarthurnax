@@ -8,6 +8,6 @@ var DestLocales = [...]string{"en", "es", "it", "de", "hu", "pt", "pl", "ro", "u
 
 type TranslationGroup struct {
 	Path   string
-	source *translation.TranslationFile
-	files  []*translation.TranslationFile
+	source *translation.File
+	files  []*translation.File
 }

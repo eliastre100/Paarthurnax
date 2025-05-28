@@ -1,7 +1,7 @@
 package translationGroup
 
 import (
-	"Paarthurnax/internal/state/translationFile"
+	"Paarthurnax/internal/state"
 	"Paarthurnax/internal/utils"
 	"Paarthurnax/pkg/deepl"
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func (group *TranslationGroup) Apply(changes []translationFile.Change) error {
+func (group *TranslationGroup) Apply(changes []state.Change) error {
 	translator, err := deepl.NewClient(os.Getenv("DEEPL_API_KEY"), deepl.DeepLDomainFree)
 	if err != nil {
 		return errors.New("Unable to initialize the translation engine: " + err.Error())
@@ -59,9 +59,9 @@ func revertTranslationPreparation(text string, ctx map[string]string) (string, e
 	return text, nil
 }
 
-func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Change, translator *deepl.Client) error {
+func handleStandaloneSegment(group *TranslationGroup, change *state.Change, translator *deepl.Client) error {
 	for _, file := range group.files {
-		if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
+		if change.Kind == state.Added || change.Kind == state.Updated {
 			value, err := group.source.GetSegmentValueAt(change.Path)
 			if err != nil {
 				return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
@@ -86,7 +86,7 @@ func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Ch
 			if err = file.SetSegmentValueAt(change.Path, translation); err != nil {
 				return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 			}
-		} else if change.Kind == translationFile.Removed {
+		} else if change.Kind == state.Removed {
 			if err := file.RemoveSegmentAt(change.Path); err != nil {
 				return errors.New("Unable to remove segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 			}
@@ -95,14 +95,14 @@ func handleStandaloneSegment(group *TranslationGroup, change *translationFile.Ch
 	return nil
 }
 
-func handlePluralSegment(part string, group *TranslationGroup, change *translationFile.Change, translator *deepl.Client) error {
+func handlePluralSegment(part string, group *TranslationGroup, change *state.Change, translator *deepl.Client) error {
 	for _, file := range group.files {
 		affectedKeys := determineAffectedKeysIn(part, file.Locale)
 		for _, definition := range affectedKeys {
 			pathParts := strings.Split(change.Path, ".")
 			localKey := strings.Join(append(pathParts[:len(pathParts)-1], definition.key), ".")
 
-			if change.Kind == translationFile.Added || change.Kind == translationFile.Updated {
+			if change.Kind == state.Added || change.Kind == state.Updated {
 				value, err := group.source.GetSegmentValueAt(change.Path)
 				if err != nil {
 					return errors.New("Unable to get the value of the source segment " + change.Path + ": " + err.Error())
@@ -130,7 +130,7 @@ func handlePluralSegment(part string, group *TranslationGroup, change *translati
 				if err = file.SetSegmentValueAt(localKey, translation); err != nil {
 					return errors.New("Unable to set the value of the source segment " + change.Path + " in locale " + file.Locale + ": " + err.Error())
 				}
-			} else if change.Kind == translationFile.Removed {
+			} else if change.Kind == state.Removed {
 				if err := file.RemoveSegmentAt(localKey); err != nil {
 					return errors.New("Unable to remove segment " + localKey + " in locale " + file.Locale + ": " + err.Error())
 				}

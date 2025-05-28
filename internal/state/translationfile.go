@@ -1,10 +1,15 @@
-package translationFile
+package state
 
 const (
 	Added   = 0
 	Removed = 1
 	Updated = 2
 )
+
+type TranslationFile struct {
+	Path           string
+	SegmentsHashes map[string]string // Key: sha1
+}
 
 type Change struct {
 	Kind int8

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"Paarthurnax/internal/state"
+	statePkg "Paarthurnax/internal/state"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -14,13 +14,13 @@ The repository should be in a translated state as all segments will be considere
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Generating state from disk...")
 
-		state, err := state.LoadFromDisk("config/locales", true)
+		state, err := statePkg.BuildFromDisk("config/locales", true)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		log.Println("Persisting state...")
-		if err = state.Save(); err != nil {
+		if err = state.Save(statePkg.PaarthurnaxStateFile); err != nil {
 			log.Fatal(err)
 		}
 	},

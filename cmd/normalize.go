@@ -16,7 +16,7 @@ var NormalizeCmd = &cobra.Command{
 	Long:  `Normalize all the other language to limit noise on sub-secant translations`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Loading current state from disk...")
-		nState, err := state.LoadFromDisk("config/locales", false)
+		nState, err := state.BuildFromDisk("config/locales", false)
 		if err != nil {
 			log.Fatal(err)
 		}

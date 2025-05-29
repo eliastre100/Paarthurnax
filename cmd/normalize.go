@@ -3,7 +3,7 @@ package cmd
 import (
 	"Paarthurnax/internal/state"
 	"Paarthurnax/internal/translation"
-	"Paarthurnax/internal/translationGroup"
+	"Paarthurnax/internal/translationgroup"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
@@ -25,7 +25,7 @@ var NormalizeCmd = &cobra.Command{
 		for _, nFile := range nState.Files {
 			log.Println(fmt.Sprintf("Processing %s...", nFile.Path))
 
-			for _, locale := range translationGroup.DestLocales {
+			for _, locale := range translationgroup.DestLocales {
 				path := strings.Replace(nFile.Path, "fr.yml", locale+".yml", 1)
 				file, err := translation.LoadOrCreate(path)
 				if err != nil {

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"Paarthurnax/internal/state"
-	"Paarthurnax/internal/translationGroup"
+	"Paarthurnax/internal/translationgroup"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
@@ -31,7 +31,7 @@ var TranslateCmd = &cobra.Command{
 			changes := nFile.Changes(pState.GetTranslationFile(nFile.Path))
 			if len(changes) != 0 {
 				log.Println(fmt.Sprintf("Applying changes and translating %s...", nFile.Path))
-				group, err := translationGroup.New(nFile.Path)
+				group, err := translationgroup.NewGroup(nFile.Path)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -45,7 +45,7 @@ var TranslateCmd = &cobra.Command{
 		for _, pFile := range pState.Files {
 			if nState.GetTranslationFile(pFile.Path) == nil {
 				log.Println("Cleaning up translation of", pFile.Path)
-				if errors := translationGroup.Cleanup(pFile.Path); len(errors) != 0 {
+				if errors := translationgroup.Cleanup(pFile.Path); len(errors) != 0 {
 					log.Println("Unable some translation files:")
 					for _, err := range errors {
 						log.Println(err)

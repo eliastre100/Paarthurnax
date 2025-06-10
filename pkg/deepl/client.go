@@ -98,7 +98,7 @@ func (c *Client) fetch(endpoint string, body []byte, try int) ([]byte, error) {
 	case 500:
 		slog.Warn("Request failed with code 500", "endpoint", endpoint)
 	case 429:
-		if try+1 < c.MaxRetry {
+		if try+1 > c.MaxRetry {
 			return nil, fmt.Errorf("deepl responded with status %d (%s) (too many retries)", resp.StatusCode, resp.Status)
 		}
 		time.Sleep(time.Duration(math.Min(math.Ceil(float64(try)*math.Pow(1.6, float64(try))), 1000)) * time.Second)

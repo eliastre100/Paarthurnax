@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- DeepL 529 response in case of too many requests does not fails and retry with backoff
+- DeepL 529 response in case of too many requests does not fail and retry with backoff
+- DeepL request no longer set Content-Type with an empty body
 
 ## [0.1.0] - 2024-09-17
 

@@ -56,7 +56,7 @@ func NewClient(apiKey string, domain string) (*Client, error) {
 }
 
 func (c *Client) refreshLanguages() error {
-	payload, err := c.fetch("v2/languages?type=source", nil, 0)
+	payload, err := c.fetch("GET", "v2/languages?type=source", nil, 0)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (c *Client) Translate(text string, sourceLocale string, destinationLocale s
 	if err != nil {
 		return "", errors.New("Unable to create translation request: " + err.Error())
 	}
-	payload, err := c.fetch("/v2/translate", request, 0)
+	payload, err := c.fetch("POST", "/v2/translate", request, 0)
 
 	var translations translationResponse
 	if err = json.Unmarshal(payload, &translations); err != nil {
@@ -77,16 +77,18 @@ func (c *Client) Translate(text string, sourceLocale string, destinationLocale s
 	return translations.Translations[0].Text, nil
 }
 
-func (c *Client) fetch(endpoint string, body []byte, try int) ([]byte, error) {
+func (c *Client) fetch(method string, endpoint string, body []byte, try int) ([]byte, error) {
 	endpoint, _ = strings.CutPrefix(endpoint, "/")
 	url := fmt.Sprintf("https://%s/%s", c.domain, endpoint)
 	httpClient := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/json")
+	if body != nil {
+		req.Header.Add("Content-Type", "application/json")
+	}
 	req.Header.Add("Authorization", fmt.Sprintf("DeepL-Auth-Key %s", c.apiKey))
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -102,7 +104,7 @@ func (c *Client) fetch(endpoint string, body []byte, try int) ([]byte, error) {
 			return nil, fmt.Errorf("deepl responded with status %d (%s) (too many retries)", resp.StatusCode, resp.Status)
 		}
 		time.Sleep(time.Duration(math.Min(math.Ceil(float64(try)*math.Pow(1.6, float64(try))), 1000)) * time.Second)
-		return c.fetch(endpoint, body, try+1)
+		return c.fetch(method, endpoint, body, try+1)
 	}
 
 	return nil, extractResponseErrors(resp)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Report the DeepL underlying error on translation request failure
+
 ### Fixed
 
 - DeepL 529 response in case of too many requests does not fails and retry with backoff

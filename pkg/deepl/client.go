@@ -104,5 +104,24 @@ func (c *Client) fetch(endpoint string, body []byte, try int) ([]byte, error) {
 		time.Sleep(time.Duration(math.Min(math.Ceil(float64(try)*math.Pow(1.6, float64(try))), 1000)) * time.Second)
 		return c.fetch(endpoint, body, try+1)
 	}
-	return nil, fmt.Errorf("unexpected response code %d", resp.StatusCode)
+
+	return nil, extractResponseErrors(resp)
+}
+
+func extractResponseErrors(resp *http.Response) error {
+	if !strings.HasPrefix(resp.Header.Get("Content-Type"), "application/json") {
+		return fmt.Errorf("unexpected response code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("unexpected response code %d", resp.StatusCode)
+	}
+	var payload struct {
+		Errors map[string][]string `json:"errors"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return fmt.Errorf("unexpected response code %d", resp.StatusCode)
+	}
+	return fmt.Errorf("unexpected response error: %v (code %d)", payload.Errors, resp.StatusCode)
 }

@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"Paarthurnax/internal/state"
+	"Paarthurnax/internal/state/v1"
 	"Paarthurnax/internal/translationgroup"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var TranslateCmd = &cobra.Command{
@@ -13,24 +14,24 @@ var TranslateCmd = &cobra.Command{
 	Short: "Translate the repository",
 	Long:  `Translate all the modified source segment into every other language using DeepL`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Loading previous state from disk...")
-		pState, err := state.LoadState(state.PaarthurnaxStateFile)
+		log.Info("Loading previous state from disk...", "path", v1.StateFile)
+		pState, err := state.Load(v1.StateFile)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to load previous state: %v", err)
 		}
 
-		log.Println("Generating current state from disk...")
-		nState, err := state.BuildFromDisk("config/locales", false)
+		log.Info("Generating current state from disk...", "path", "config/locales")
+		nState, err := state.Generate("config/locales", "fr")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to generate current state: %v", err)
 		}
 
-		log.Println("Reconciling states...")
+		log.Info("Reconciling states...")
 		for _, nFile := range nState.Files {
-			log.Println(fmt.Sprintf("Processing %s", nFile.Path))
-			changes := nFile.Changes(pState.GetTranslationFile(nFile.Path))
+			log.Info(fmt.Sprintf("Processing %s", nFile.Path))
+			changes := nState.Compare(nFile.Path, pState.Snapshot)
 			if len(changes) != 0 {
-				log.Println(fmt.Sprintf("Applying changes and translating %s...", nFile.Path))
+				log.Info(fmt.Sprintf("Applying changes and translating %s...", nFile.Path))
 				group, err := translationgroup.NewGroup(nFile.Path)
 				if err != nil {
 					log.Fatal(err)
@@ -41,21 +42,21 @@ var TranslateCmd = &cobra.Command{
 			}
 		}
 
-		log.Println("Cleaning up removed files...")
+		log.Info("Cleaning up removed files...")
 		for _, pFile := range pState.Files {
-			if nState.GetTranslationFile(pFile.Path) == nil {
-				log.Println("Cleaning up translation of", pFile.Path)
+			if nState.GetFile(pFile.Path) == nil {
+				log.Info("Cleaning up translation of", pFile.Path)
 				if errors := translationgroup.Cleanup(pFile.Path); len(errors) != 0 {
-					log.Println("Unable some translation files:")
+					log.Info("Unable some translation files:")
 					for _, err := range errors {
-						log.Println(err)
+						log.Info(err)
 					}
 				}
 			}
 		}
 
-		log.Println("Persisting new state...")
-		if err := nState.Save(state.PaarthurnaxStateFile); err != nil {
+		log.Info("Persisting new state...")
+		if err := nState.Save(v1.StateFile); err != nil {
 			log.Fatal("Failed to persist new state: " + err.Error())
 		}
 	},

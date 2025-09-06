@@ -1,4 +1,4 @@
-package state
+package v0
 
 import (
 	"Paarthurnax/internal/translation"
@@ -11,10 +11,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-)
-
-const (
-	PaarthurnaxStateFile = ".paarthurnax"
 )
 
 type TranslationState struct {

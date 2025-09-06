@@ -5,8 +5,8 @@ import (
 	"Paarthurnax/internal/translation"
 	"Paarthurnax/internal/translationgroup"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"log"
 	"strings"
 )
 
@@ -15,15 +15,15 @@ var NormalizeCmd = &cobra.Command{
 	Short: "Normalize the repository",
 	Long:  `Normalize all the other language to limit noise on sub-secant translations`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Loading current state from disk...")
-		nState, err := state.BuildFromDisk("config/locales", false)
+		log.Info("Loading current state from disk...")
+		nState, err := state.Generate("config/locales", "fr")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		log.Println("Normalizing translations...")
+		log.Info("Normalizing translations...")
 		for _, nFile := range nState.Files {
-			log.Println(fmt.Sprintf("Processing %s...", nFile.Path))
+			log.Info(fmt.Sprintf("Processing %s...", nFile.Path))
 
 			for _, locale := range translationgroup.DestLocales {
 				path := strings.Replace(nFile.Path, "fr.yml", locale+".yml", 1)
@@ -37,6 +37,6 @@ var NormalizeCmd = &cobra.Command{
 			}
 		}
 
-		log.Println("Done!")
+		log.Info("Done!")
 	},
 }

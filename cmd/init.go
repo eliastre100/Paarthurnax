@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	statePkg "Paarthurnax/internal/state"
+	"Paarthurnax/internal/state"
+	"Paarthurnax/internal/state/v1"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var InitCmd = &cobra.Command{
@@ -12,15 +13,15 @@ var InitCmd = &cobra.Command{
 	Long: `Initialize the repository for future use of Paarthurnax.
 The repository should be in a translated state as all segments will be considered translated`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Generating state from disk...")
+		log.Info("Generating state from disk...", "path", "config/locales")
 
-		state, err := statePkg.BuildFromDisk("config/locales", true)
+		s, err := state.Generate("config/locales", "fr")
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err)
 		}
 
-		log.Println("Persisting state...")
-		if err = state.Save(statePkg.PaarthurnaxStateFile); err != nil {
+		log.Info("Persisting state...", "path", v1.StateFile)
+		if err = s.Save(v1.StateFile); err != nil {
 			log.Fatal(err)
 		}
 	},

@@ -9,6 +9,8 @@ import (
 	"os"
 )
 
+const CurrentVersion = 1
+
 type State interface {
 	Save(path string) error
 }
@@ -36,13 +38,9 @@ func Load(path string) (*v1.State, error) {
 	}
 	log.Debug("State version determined", "path", path, "version", version)
 
-	switch version {
-	case 0:
-		log.Fatal("TODO: State version 0 upgrade to v1 is not supported")
-		return nil, nil
-	case 1:
-		return v1.Load(data)
-	default:
+	if version <= CurrentVersion {
+		return v1.Load(data, version)
+	} else {
 		return nil, fmt.Errorf("state version %d is not supported", version)
 	}
 }

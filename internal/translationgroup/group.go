@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -136,7 +135,8 @@ func handlePluralSegment(part string, group *Group, change *v1.Change, translato
 					return fmt.Errorf("unable to get the value of the source segment %s: %w", change.Path, err)
 				}
 
-				localValue := strings.ReplaceAll(value, "%{count}", strconv.Itoa(int(definition.tip)))
+				countTip := fmt.Sprintf("<span translate=\"no\">%d</span>", definition.tip)
+				localValue := strings.ReplaceAll(value, "%{count}", countTip)
 				valueForTranslation, ctx, err := prepareForTranslation(localValue)
 				if err != nil {
 					return fmt.Errorf("unable to prepare for translation %s: %w", change.Path, err.Error())
@@ -149,7 +149,7 @@ func handlePluralSegment(part string, group *Group, change *v1.Change, translato
 				if err != nil {
 					return fmt.Errorf("unable to revert translation preparation for %s: %w", change.Path, err)
 				}
-				translation = strings.ReplaceAll(translation, strconv.Itoa(int(definition.tip)), "%{count}") // FIXME: wrong ! if it is not a count but fixed value it would create a var that is not present in the source
+				translation = strings.ReplaceAll(translation, countTip, "%{count}")
 
 				if err = checkVariableEquity(value, translation); err != nil {
 					return fmt.Errorf("the translation does not contain the required variables: %w", err)

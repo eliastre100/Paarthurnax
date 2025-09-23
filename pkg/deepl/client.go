@@ -69,10 +69,13 @@ func (c *Client) Translate(text string, sourceLocale string, destinationLocale s
 		return "", errors.New("Unable to create translation request: " + err.Error())
 	}
 	payload, err := c.fetch("POST", "/v2/translate", request, 0)
+	if err != nil {
+		return "", errors.New("unable to fetch translation: " + err.Error())
+	}
 
 	var translations translationResponse
 	if err = json.Unmarshal(payload, &translations); err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to unmarshall deepl response: %w", err)
 	}
 	return translations.Translations[0].Text, nil
 }

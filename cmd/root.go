@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
 
@@ -12,9 +13,16 @@ translation of Rails project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		println("Paarthurnax version 0.1")
 	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
+			log.SetLevel(log.DebugLevel)
+		}
+	},
 }
 
 func init() {
+	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
+
 	RootCmd.AddCommand(InitCmd)
 	RootCmd.AddCommand(TranslateCmd)
 	RootCmd.AddCommand(NormalizeCmd)

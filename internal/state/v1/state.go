@@ -3,10 +3,11 @@ package v1
 import (
 	v0 "Paarthurnax/internal/state/v0"
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/pelletier/go-toml/v2"
 	"os"
 	"time"
+
+	"github.com/charmbracelet/log"
+	"github.com/pelletier/go-toml/v2"
 )
 
 const (
@@ -14,8 +15,26 @@ const (
 )
 
 type State struct {
-	Version int `toml:"version"`
+	Version int     `toml:"version"`
+	Locales Locales `toml:"locales"`
 	*Snapshot
+}
+
+func New(path string, srcLocale string) (*State, error) {
+	s := &State{
+		Version: 1,
+		Locales: Locales{
+			Source:       srcLocale,
+			Destinations: []string{},
+		},
+	}
+	snapshot, err := NewSnapshot(path, srcLocale)
+	if err != nil {
+		return nil, err
+	}
+	s.Snapshot = snapshot
+
+	return s, nil
 }
 
 func Load(data []byte, version int) (*State, error) {
@@ -50,38 +69,23 @@ func upgradeFromV0(data []byte, version int) (*State, error) {
 		})
 	}
 	return &State{
-		Version:  1,
+		Version: 1,
+		Locales: Locales{
+			// V0 assumed that the source locale was French, and the destination locales the one mentioned
+			// Given the fixed values in versions before the new state format.
+			// We can safely assume that the user is using this set of locales in his project if he was using a v0 state
+			Source:       "fr",
+			Destinations: []string{"es", "en", "de", "it", "hu", "uk", "pl", "pt", "ro"},
+		},
 		Snapshot: snapshot,
 	}, nil
 }
 
-func Build(path string, srcLocale string) (*State, error) {
-	s := &State{
-		Version: 1,
-	}
-	snapshot, err := NewSnapshot(path, srcLocale)
-	if err != nil {
-		return nil, err
-	}
-	s.Snapshot = snapshot
-
-	return s, nil
-}
-
 func (s *State) Save(path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
 	encoded, err := toml.Marshal(s)
 	if err != nil {
 		return err
 	}
-	if _, err = f.Write(encoded); err != nil {
-		return err
-	}
-	if err = f.Close(); err != nil {
-		return err
-	}
-	return nil
+
+	return os.WriteFile(path, encoded, 0644)
 }

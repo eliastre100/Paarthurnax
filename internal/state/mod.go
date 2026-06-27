@@ -3,10 +3,11 @@ package state
 import (
 	v1 "Paarthurnax/internal/state/v1"
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/pelletier/go-toml/v2"
 	"io"
 	"os"
+
+	"github.com/charmbracelet/log"
+	"github.com/pelletier/go-toml/v2"
 )
 
 const CurrentVersion = 1
@@ -56,5 +57,5 @@ func getVersion(data []byte) (int, error) {
 }
 
 func Generate(path string, srcLocale string) (*v1.State, error) {
-	return v1.Build(path, srcLocale)
+	return v1.New(path, srcLocale)
 }

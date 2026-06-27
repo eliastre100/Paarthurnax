@@ -5,8 +5,9 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type File struct {
@@ -14,14 +15,16 @@ type File struct {
 	Segments map[string]string `toml:"segments"` // key => sha1
 }
 
+type ChangeKind int8
+
 const (
-	Added = iota
+	Added ChangeKind = iota
 	Removed
 	Updated
 )
 
 type Change struct {
-	Kind int8
+	Kind ChangeKind
 	Path string
 }
 
@@ -31,24 +34,24 @@ func NewFile(path string) (*File, error) {
 		return nil, fmt.Errorf("failed to read translation file: %w", err)
 	}
 
-	var yamlData map[string]interface{}
+	var yamlData map[string]any
 	err = yaml.Unmarshal(data, &yamlData)
 	if err != nil {
 		return nil, fmt.Errorf("faild to unmarshall YAML: %w", err)
 	}
 
 	if len(yamlData) != 1 {
-		return nil, fmt.Errorf("provided YAML file is not a valid rails locale file")
+		return nil, fmt.Errorf("multilingual locale files are not supported yet, please use single locale file")
 	}
 
 	locale := utils.MapKeys(yamlData)[0]
 	return &File{
 		Path:     path,
-		Segments: hashTranslations(yamlData[locale].(map[string]interface{})),
+		Segments: hashTranslations(yamlData[locale].(map[string]any)),
 	}, nil
 }
 
-func hashTranslations(m map[string]interface{}) map[string]string {
+func hashTranslations(m map[string]any) map[string]string {
 	hashes := make(map[string]string)
 
 	for k, v := range m {

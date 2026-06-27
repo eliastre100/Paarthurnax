@@ -2,10 +2,11 @@ package v1
 
 import (
 	"fmt"
-	"github.com/charmbracelet/log"
 	"io/fs"
 	"path/filepath"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 type Snapshot struct {
@@ -43,7 +44,7 @@ func (s *Snapshot) Compare(path string, other *Snapshot) []Change {
 }
 
 // TODO: this is fine for now to iterate over all the files as a typical rails app will not have thousands of locale files,
-// but a hash would make sense, even tho it is not that easy to integrate while keeping the toml export as an array
+// however a hash would make sense at runtime
 func (s *Snapshot) GetFile(path string) *File {
 	for _, file := range s.Files {
 		if file.Path == path {

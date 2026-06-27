@@ -5,6 +5,7 @@ import (
 	"Paarthurnax/internal/state/v1"
 	"Paarthurnax/internal/translationgroup"
 	"fmt"
+
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
@@ -55,8 +56,9 @@ var TranslateCmd = &cobra.Command{
 			}
 		}
 
+		pState.Snapshot = nState.Snapshot
 		log.Info("Persisting new state...")
-		if err := nState.Save(v1.StateFile); err != nil {
+		if err := pState.Save(v1.StateFile); err != nil {
 			log.Fatal("Failed to persist new state: " + err.Error())
 		}
 	},

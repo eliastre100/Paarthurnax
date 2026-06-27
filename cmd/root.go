@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"Paarthurnax/cmd/locales"
+
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
@@ -26,4 +28,5 @@ func init() {
 	RootCmd.AddCommand(InitCmd)
 	RootCmd.AddCommand(TranslateCmd)
 	RootCmd.AddCommand(NormalizeCmd)
+	RootCmd.AddCommand(locales.LocalesCmd)
 }

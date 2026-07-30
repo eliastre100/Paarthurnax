@@ -11,3 +11,7 @@ const (
 )
 
 var Locales = []Locale{English, French}
+
+func (l Locale) String() string {
+	return string(l)
+}

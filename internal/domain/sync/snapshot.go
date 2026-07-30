@@ -24,9 +24,9 @@ func NewSnapshot(locale string) *Snapshot {
 func NewSnapshotFromProject(project *translation.Project, locale translation.Locale) (*Snapshot, error) {
 	snapshot := NewSnapshot(string(locale))
 
-	for _, sourceDocument := range project.Documents[locale] {
+	for _, sourceDocument := range project.DocumentsWithCatalog(locale) {
 		document := NewDocument(sourceDocument.Name)
-		catalog := sourceDocument.Catalogs[locale]
+		catalog := sourceDocument.Catalog(locale)
 
 		for key, segment := range catalog.Segments {
 			digest := Digest(fmt.Sprintf("%x", sha1.Sum([]byte(segment.Value))))

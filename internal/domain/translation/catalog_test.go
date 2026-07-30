@@ -35,8 +35,8 @@ func TestCatalogAddAndGetSegment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetSegment() error = %v, want nil", err)
 	}
-	if !reflect.DeepEqual(got, segment) {
-		t.Errorf("GetSegment() = %#v, want %#v", got, segment)
+	if !reflect.DeepEqual(*got, segment) {
+		t.Errorf("GetSegment() = %#v, want %#v", *got, segment)
 	}
 }
 
@@ -48,8 +48,8 @@ func TestCatalogGetSegmentNotFound(t *testing.T) {
 	if !errors.Is(err, ErrSegmentNotFound) {
 		t.Fatalf("GetSegment() error = %v, want %v", err, ErrSegmentNotFound)
 	}
-	if !reflect.DeepEqual(got, Segment{}) {
-		t.Errorf("GetSegment() = %#v, want empty segment", got)
+	if got != nil {
+		t.Errorf("GetSegment() = %#v, want nil", got)
 	}
 }
 

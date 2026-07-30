@@ -39,10 +39,10 @@ func (c *Catalog) UpdateSegment(key string, segment Segment) error {
 	return nil
 }
 
-func (c *Catalog) GetSegment(key string) (Segment, error) {
+func (c *Catalog) GetSegment(key string) (*Segment, error) {
 	segment, ok := c.Segments[key]
 	if !ok {
-		return Segment{}, ErrSegmentNotFound
+		return nil, ErrSegmentNotFound
 	}
-	return segment, nil
+	return &segment, nil
 }

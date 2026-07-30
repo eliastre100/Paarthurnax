@@ -32,11 +32,20 @@ func (document *Document) AddCatalog(catalog *Catalog) error {
 
 	document.Catalogs[catalog.Locale] = catalog
 	if len(document.Catalogs) > 1 {
-		document.Multilingual = true
+		document.Multilingual = true // FIXME: this is weak as a new multilingual document can be created and only have the source locale at first
 	}
 	return nil
 }
 
 func (document *Document) Locales() []Locale {
 	return slices.Collect(maps.Keys(document.Catalogs))
+}
+
+func (document *Document) HasLocale(locale Locale) bool {
+	_, ok := document.Catalogs[locale]
+	return ok
+}
+
+func (document *Document) Catalog(locale Locale) *Catalog {
+	return document.Catalogs[locale]
 }

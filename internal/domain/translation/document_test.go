@@ -121,3 +121,33 @@ func TestDocumentLocales(t *testing.T) {
 		}
 	})
 }
+
+func TestDocumentHasLocale(t *testing.T) {
+	document := NewDocument("foo")
+	english := NewCatalog(English)
+	if err := document.AddCatalog(english); err != nil {
+		t.Fatalf("AddCatalog() error = %v, want nil", err)
+	}
+
+	if !document.HasLocale(English) {
+		t.Error("HasLocale(English) = false, want true")
+	}
+	if document.HasLocale(French) {
+		t.Error("HasLocale(French) = true, want false")
+	}
+}
+
+func TestDocumentCatalog(t *testing.T) {
+	document := NewDocument("foo")
+	english := NewCatalog(English)
+	if err := document.AddCatalog(english); err != nil {
+		t.Fatalf("AddCatalog() error = %v, want nil", err)
+	}
+
+	if got := document.Catalog(English); got != english {
+		t.Errorf("Catalog(English) = %p, want %p", got, english)
+	}
+	if got := document.Catalog(French); got != nil {
+		t.Errorf("Catalog(French) = %p, want nil", got)
+	}
+}

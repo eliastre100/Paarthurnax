@@ -98,8 +98,8 @@ func TestBuildTranslationText(t *testing.T) {
 	if len(reverseHash) != 3 {
 		t.Fatalf("reverse hash has %d entries, want 3", len(reverseHash))
 	}
-	if got := reverseEncodedText(text, reverseHash); got != segment.Value {
-		t.Fatalf("reverseEncodedText() = %q, want %q", got, segment.Value)
+	if got, err := reverseEncodedText(text, reverseHash); err != nil || got != segment.Value {
+		t.Fatalf("reverseEncodedText() = %q, %v; want %q, nil", got, err, segment.Value)
 	}
 }
 
@@ -121,15 +121,68 @@ func TestBuildTranslationTextPlainText(t *testing.T) {
 func TestReverseEncodedText(t *testing.T) {
 	t.Parallel()
 
-	const encodedName = `<span translate="no" id="name-id">name</span>`
+	const encodedFirstName = `<span translate="no" id="first-name-id">name</span>`
 	const encodedCount = `<span translate="no" id="count-id">count</span>`
+	const encodedSecondName = `<span translate="no" id="second-name-id">name</span>`
 
-	got := reverseEncodedText(
-		"Bonjour "+encodedName+", vous avez "+encodedCount+" messages. "+encodedName,
-		map[string]string{encodedName: "name", encodedCount: "count"},
+	got, err := reverseEncodedText(
+		"Bonjour "+encodedFirstName+", vous avez "+encodedCount+" messages. "+encodedSecondName,
+		map[string]string{encodedFirstName: "name", encodedCount: "count", encodedSecondName: "name"},
 	)
+	if err != nil {
+		t.Fatalf("reverseEncodedText() returned unexpected error: %v", err)
+	}
 	want := "Bonjour %{name}, vous avez %{count} messages. %{name}"
 	if got != want {
 		t.Fatalf("reverseEncodedText() = %q, want %q", got, want)
+	}
+}
+
+func TestTranslatorTranslateRejectsMissingProtectedVariable(t *testing.T) {
+	t.Parallel()
+
+	translator := NewTranslator(&fakeClient{response: func(text string) string {
+		return "Bonjour"
+	}})
+	segment := *translation.NewSegment("greeting", "Hello %{name}!")
+
+	got, err := translator.Translate(segment, translation.English, translation.French)
+
+	if err == nil || !strings.Contains(err.Error(), "protected variable") {
+		t.Fatalf("Translate() error = %v, want missing protected variable error", err)
+	}
+	if !reflect.DeepEqual(got, segment) {
+		t.Fatalf("Translate() = %#v, want original segment %#v", got, segment)
+	}
+}
+
+func TestTranslatorTranslateRejectsUnexpectedVariable(t *testing.T) {
+	t.Parallel()
+
+	translator := NewTranslator(&fakeClient{response: func(text string) string {
+		return strings.Replace(text, "Hello", "Bonjour %{unexpected}", 1)
+	}})
+	segment := *translation.NewSegment("greeting", "Hello %{name}!")
+
+	got, err := translator.Translate(segment, translation.English, translation.French)
+
+	if err == nil || !strings.Contains(err.Error(), "unexpected variable") {
+		t.Fatalf("Translate() error = %v, want unexpected variable error", err)
+	}
+	if !reflect.DeepEqual(got, segment) {
+		t.Fatalf("Translate() = %#v, want original segment %#v", got, segment)
+	}
+}
+
+func TestCheckVariableEquityRejectsIntroducedVariable(t *testing.T) {
+	t.Parallel()
+
+	source := *translation.NewSegment("greeting", "Hello %{name}!")
+	translated := *translation.NewSegment("greeting", "Bonjour %{name}, %{title}!")
+
+	err := checkVariableEquity(source, translated)
+
+	if err == nil || !strings.Contains(err.Error(), "unexpected variable") {
+		t.Fatalf("checkVariableEquity() error = %v, want unexpected variable error", err)
 	}
 }

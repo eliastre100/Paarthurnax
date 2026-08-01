@@ -67,7 +67,7 @@ func loadDocument(path string) (*translation.Document, error) {
 		document.Multilingual = true
 	}
 
-	return &document, nil
+	return document, nil
 }
 
 func fillCatalog(catalog *translation.Catalog, segments map[string]any, prefix string) error {

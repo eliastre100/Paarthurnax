@@ -34,17 +34,20 @@ en:
 		t.Fatalf("Load() error = %v, want nil", err)
 	}
 
-	if len(project.Documents) != 2 {
-		t.Fatalf("len(Documents) = %d, want 2 documents", len(project.Documents))
+	if len(project.Documents) != 3 {
+		t.Fatalf("len(Documents) = %d, want 3 documents", len(project.Documents))
 	}
 
 	configPath := filepath.Join(root, "config.yml")
-	englishConfig := project.Documents[translation.English][configPath]
+	englishConfig := project.Documents[configPath]
 	if englishConfig == nil {
-		t.Fatalf("English config document missing at %q", configPath)
+		t.Fatalf("config document missing at %q", configPath)
 	}
-	if englishConfig != project.Documents[translation.French][configPath] {
-		t.Error("multilingual document should be shared by each locale index")
+	if englishConfig != project.DocumentsWithCatalog(translation.English)[configPath] {
+		t.Error("English catalog view should contain the indexed document")
+	}
+	if englishConfig != project.DocumentsWithCatalog(translation.French)[configPath] {
+		t.Error("French catalog view should contain the indexed document")
 	}
 	if !englishConfig.Multilingual {
 		t.Error("Multilingual = false, want true")
@@ -56,19 +59,19 @@ en:
 	assertSegment(t, englishConfig.Catalogs[translation.French], "menu.file", "Fichier")
 
 	errorsPath := filepath.Join(root, "nested", "errors.yaml")
-	if document := project.Documents[translation.English][errorsPath]; document == nil {
+	if document := project.DocumentsWithCatalog(translation.English)[errorsPath]; document == nil {
 		t.Errorf("English errors document missing at %q", errorsPath)
 	}
 
 	uppercasePath := filepath.Join(root, "uppercase.YAML")
-	uppercaseDocument := project.Documents[translation.English][uppercasePath]
+	uppercaseDocument := project.DocumentsWithCatalog(translation.English)[uppercasePath]
 	if uppercaseDocument == nil {
 		t.Fatalf("English uppercase document missing at %q", uppercasePath)
 	}
 	assertSegment(t, uppercaseDocument.Catalogs[translation.English], "uppercase", "Loaded")
 
-	if len(project.Documents[translation.English]) != 3 {
-		t.Errorf("len(Documents[en]) = %d, want 3", len(project.Documents[translation.English]))
+	if got := len(project.DocumentsWithCatalog(translation.English)); got != 3 {
+		t.Errorf("len(DocumentsWithCatalog(en)) = %d, want 3", got)
 	}
 }
 

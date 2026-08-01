@@ -35,8 +35,24 @@ func TestCatalogAddAndGetSegment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetSegment() error = %v, want nil", err)
 	}
-	if !reflect.DeepEqual(*got, segment) {
-		t.Errorf("GetSegment() = %#v, want %#v", *got, segment)
+	if !reflect.DeepEqual(got, segment) {
+		t.Errorf("GetSegment() = %#v, want %#v", got, segment)
+	}
+}
+
+func TestCatalogAddSegmentReplacesExistingSegment(t *testing.T) {
+	catalog := NewCatalog("en")
+	original := Segment{Key: "greeting", Value: "Hello"}
+	updated := Segment{Key: "greeting", Value: "Hi", Plural: true}
+	catalog.AddSegment(original)
+
+	catalog.AddSegment(updated)
+
+	if len(catalog.Segments) != 1 {
+		t.Fatalf("len(Segments) = %d, want 1", len(catalog.Segments))
+	}
+	if got := catalog.Segments[updated.Key]; !reflect.DeepEqual(got, updated) {
+		t.Errorf("Segments[%q] = %#v, want %#v", updated.Key, got, updated)
 	}
 }
 
@@ -48,8 +64,8 @@ func TestCatalogGetSegmentNotFound(t *testing.T) {
 	if !errors.Is(err, ErrSegmentNotFound) {
 		t.Fatalf("GetSegment() error = %v, want %v", err, ErrSegmentNotFound)
 	}
-	if got != nil {
-		t.Errorf("GetSegment() = %#v, want nil", got)
+	if !reflect.DeepEqual(got, Segment{}) {
+		t.Errorf("GetSegment() = %#v, want zero Segment", got)
 	}
 }
 
@@ -92,5 +108,24 @@ func TestCatalogRemoveSegment(t *testing.T) {
 
 	if _, ok := catalog.Segments[segment.Key]; ok {
 		t.Errorf("Segments[%q] still exists after RemoveSegment", segment.Key)
+	}
+}
+
+func TestCatalogIsEmpty(t *testing.T) {
+	catalog := NewCatalog("en")
+
+	if !catalog.isEmpty() {
+		t.Error("isEmpty() = false, want true for a new catalog")
+	}
+
+	segment := Segment{Key: "greeting", Value: "Hello"}
+	catalog.AddSegment(segment)
+	if catalog.isEmpty() {
+		t.Error("isEmpty() = true, want false after adding a segment")
+	}
+
+	catalog.RemoveSegment(segment.Key)
+	if !catalog.isEmpty() {
+		t.Error("isEmpty() = false, want true after removing the final segment")
 	}
 }

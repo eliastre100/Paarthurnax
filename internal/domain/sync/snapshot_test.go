@@ -44,14 +44,14 @@ func TestNewSnapshotFromProject(t *testing.T) {
 		t.Fatalf("AddCatalog(French) error = %v, want nil", err)
 	}
 
-	project.AddDocument(&messagesDocument)
+	project.AddDocument(messagesDocument)
 	errorsDocument := translation.NewDocument("errors.json")
 	frenchErrors := translation.NewCatalog(translation.French)
 	frenchErrors.AddSegment(*translation.NewSegment("not_found", "Introuvable"))
 	if err := errorsDocument.AddCatalog(frenchErrors); err != nil {
 		t.Fatalf("AddCatalog(French) error = %v, want nil", err)
 	}
-	project.AddDocument(&errorsDocument)
+	project.AddDocument(errorsDocument)
 
 	snapshot, err := NewSnapshotFromProject(project, translation.English)
 

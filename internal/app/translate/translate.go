@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func Execute(loader ProjectLoader, projectStateRepository settings.ProjectStateRepository, reporter Reporter) error {
+func Execute(loader ProjectLoader, documentStore DocumentStore, projectStateRepository settings.ProjectStateRepository, engine Engine, reporter Reporter) error {
 	project, err := loader.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load project: %w", err)
@@ -22,10 +22,23 @@ func Execute(loader ProjectLoader, projectStateRepository settings.ProjectStateR
 		return fmt.Errorf("failed to create project snapshot: %w", err)
 	}
 
-	for _, change := range sync.Diff(state.Snapshot, snapshot) {
-		fmt.Printf("%+v\n", change)
+	changes := sync.Diff(state.Snapshot, snapshot)
+	worker := NewWorker(state.Settings, project, engine, documentStore, reporter)
+	reporter.StartHandlingChanges(uint(len(changes)))
+
+	if err := process(changes, worker); err != nil {
+		return fmt.Errorf("failed to process changes: %w", err)
 	}
 
 	state.Snapshot = snapshot
 	return projectStateRepository.Save(state)
+}
+
+func process(changes []sync.DocumentChanges, worker *Worker) error {
+	for _, documentChange := range changes {
+		if err := worker.Handle(documentChange); err != nil {
+			return fmt.Errorf("failed to changes from %s: %w", documentChange.Document.Name, err)
+		}
+	}
+	return nil
 }

@@ -1,12 +1,16 @@
 package cmd
 
 import (
-	"Paarthurnax/internal/state"
-	"Paarthurnax/internal/state/v1"
-	"Paarthurnax/internal/translationgroup"
-	"fmt"
+	"Paarthurnax/internal/adapters/outbound/deepl"
+	"Paarthurnax/internal/adapters/outbound/document"
+	"Paarthurnax/internal/adapters/outbound/project"
+	"Paarthurnax/internal/adapters/outbound/reporter"
+	"Paarthurnax/internal/adapters/outbound/tomlproject"
+	"Paarthurnax/internal/app/translate"
+	deeplclient "Paarthurnax/pkg/deepl"
+	"os"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +19,22 @@ var TranslateCmd = &cobra.Command{
 	Short: "Translate the repository",
 	Long:  `Translate all the modified source segment into every other language using DeepL`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Info("Loading previous state from disk...", "path", v1.StateFile)
+		deeplApiKey := os.Getenv("DEEPL_API_KEY")
+		loader := project.NewLoader(".")
+		documentStore := document.NewStore(".")
+		projectStateRepository := tomlproject.NewRepository(".paarthurnax")
+		deeplClient, err := deeplclient.NewClient(deeplApiKey, deeplclient.DeepLDomainFree)
+		if err != nil {
+			log.Fatalf("Failed to create DeepL client: %v", err)
+		}
+		engine := deepl.NewTranslator(deeplClient)
+		reporter := reporter.NewPacmanReporter()
+
+		err = translate.Execute(loader, documentStore, projectStateRepository, engine, reporter)
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+		/*log.Info("Loading previous state from disk...", "path", v1.StateFile)
 		pState, err := state.Load(v1.StateFile)
 		if err != nil {
 			log.Fatalf("Failed to load previous state: %v", err)
@@ -60,6 +79,6 @@ var TranslateCmd = &cobra.Command{
 		log.Info("Persisting new state...")
 		if err := pState.Save(v1.StateFile); err != nil {
 			log.Fatal("Failed to persist new state: " + err.Error())
-		}
+		}*/
 	},
 }

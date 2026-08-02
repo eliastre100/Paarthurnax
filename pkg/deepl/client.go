@@ -36,7 +36,7 @@ type Language struct {
 type translationRequest struct {
 	Text           []string `json:"text"`
 	SourceLanguage string   `json:"source_lang"`
-	SargetLanguage string   `json:"target_lang"`
+	TargetLanguage string   `json:"target_lang"`
 	TagHandling    string   `json:"tag_handling"`
 }
 
@@ -64,7 +64,7 @@ func (c *Client) refreshLanguages() error {
 }
 
 func (c *Client) Translate(text string, sourceLocale string, destinationLocale string) (string, error) {
-	request, err := json.Marshal(&translationRequest{Text: []string{text}, SourceLanguage: sourceLocale, SargetLanguage: destinationLocale, TagHandling: "html"})
+	request, err := json.Marshal(&translationRequest{Text: []string{text}, SourceLanguage: sourceLocale, TargetLanguage: destinationLocale, TagHandling: "html"})
 	if err != nil {
 		return "", errors.New("Unable to create translation request: " + err.Error())
 	}

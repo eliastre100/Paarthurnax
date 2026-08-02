@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
 	"github.com/pelletier/go-toml/v2"
 )
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"Paarthurnax/internal/state"
 	"Paarthurnax/internal/state/v1"
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
 	"github.com/spf13/cobra"
 )
 

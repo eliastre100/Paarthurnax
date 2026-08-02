@@ -5,7 +5,7 @@ import (
 	v1 "Paarthurnax/internal/state/v1"
 	"slices"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
 	"github.com/spf13/cobra"
 )
 

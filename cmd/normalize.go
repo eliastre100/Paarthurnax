@@ -4,8 +4,8 @@ import (
 	"Paarthurnax/internal/state"
 	"Paarthurnax/internal/translation"
 	"Paarthurnax/internal/translationgroup"
+	"charm.land/log/v2"
 	"fmt"
-	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"strings"
 )

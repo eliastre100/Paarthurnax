@@ -1,9 +1,21 @@
 package translation
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
+
+func TestNewProject(t *testing.T) {
+	project := NewProject()
+
+	if project.Documents == nil {
+		t.Fatal("Documents = nil, want initialized map")
+	}
+	if len(project.Documents) != 0 {
+		t.Errorf("len(Documents) = %d, want 0", len(project.Documents))
+	}
+}
 
 func TestProjectAddDocument(t *testing.T) {
 	t.Run("indexes a document by name", func(t *testing.T) {
@@ -63,7 +75,7 @@ func TestProjectDocumentsWithCatalog(t *testing.T) {
 	bilingual := documentWithCatalogs(t, "common.json", English, French)
 	withoutCatalogs := NewDocument("empty.json")
 
-	for _, document := range []*Document{englishOnly, frenchOnly, bilingual, &withoutCatalogs} {
+	for _, document := range []*Document{englishOnly, frenchOnly, bilingual, withoutCatalogs} {
 		project.AddDocument(document)
 	}
 
@@ -105,6 +117,68 @@ func TestProjectDocumentsWithCatalog(t *testing.T) {
 	}
 }
 
+func TestProjectGetDocumentIn(t *testing.T) {
+	t.Run("returns the document when it already has the requested locale", func(t *testing.T) {
+		project := NewProject()
+		document := documentWithCatalogs(t, "messages.en.yml", English, French)
+		project.AddDocument(document)
+
+		got, err := project.GetDocumentIn(French, document.Name)
+
+		if err != nil {
+			t.Fatalf("GetDocumentIn() error = %v, want nil", err)
+		}
+		if got != document {
+			t.Errorf("GetDocumentIn() = %p, want %p", got, document)
+		}
+	})
+
+	t.Run("resolves the locale-specific document name", func(t *testing.T) {
+		project := NewProject()
+		source := documentWithCatalogs(t, "messages.en.yml", English)
+		destination := documentWithCatalogs(t, "messages.fr.yml", French)
+		project.AddDocument(source)
+		project.AddDocument(destination)
+
+		got, err := project.GetDocumentIn(French, source.Name)
+
+		if err != nil {
+			t.Fatalf("GetDocumentIn() error = %v, want nil", err)
+		}
+		if got != destination {
+			t.Errorf("GetDocumentIn() = %p, want %p", got, destination)
+		}
+	})
+
+	t.Run("returns not found when the source document does not exist", func(t *testing.T) {
+		project := NewProject()
+
+		got, err := project.GetDocumentIn(French, "missing.en.yml")
+
+		if !errors.Is(err, ErrDocumentNotFound) {
+			t.Fatalf("GetDocumentIn() error = %v, want %v", err, ErrDocumentNotFound)
+		}
+		if got != nil {
+			t.Errorf("GetDocumentIn() = %p, want nil", got)
+		}
+	})
+
+	t.Run("returns not found when the locale-specific document does not exist", func(t *testing.T) {
+		project := NewProject()
+		source := documentWithCatalogs(t, "messages.en.yml", English)
+		project.AddDocument(source)
+
+		got, err := project.GetDocumentIn(French, source.Name)
+
+		if !errors.Is(err, ErrDocumentNotFound) {
+			t.Fatalf("GetDocumentIn() error = %v, want %v", err, ErrDocumentNotFound)
+		}
+		if got != nil {
+			t.Errorf("GetDocumentIn() = %p, want nil", got)
+		}
+	})
+}
+
 func documentWithCatalogs(t *testing.T, name string, locales ...Locale) *Document {
 	t.Helper()
 
@@ -114,5 +188,5 @@ func documentWithCatalogs(t *testing.T, name string, locales ...Locale) *Documen
 			t.Fatalf("AddCatalog(%q) error = %v, want nil", locale, err)
 		}
 	}
-	return &document
+	return document
 }

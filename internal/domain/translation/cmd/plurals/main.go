@@ -35,6 +35,17 @@ type generatedDefinition struct {
 	Hints     []generatedHint
 }
 
+type generatedTest struct {
+	Locale string
+	Hint   int
+	Want   string
+}
+
+type pluralKeyRequest struct {
+	Locale string `json:"locale"`
+	Hint   int    `json:"hint"`
+}
+
 //go:embed evaluators/*.go.tmpl
 var evaluatorTemplates embed.FS
 
@@ -44,8 +55,12 @@ var hintsSource []byte
 //go:embed plurals.go.tmpl
 var pluralsTemplate string
 
+//go:embed plurals_test.go.tmpl
+var pluralsTestTemplate string
+
 func main() {
 	output := flag.String("output", "plurals_generated.go", "generated Go file")
+	testOutput := flag.String("test-output", "plurals_generated_test.go", "generated Go test file")
 	flag.Parse()
 
 	hints, err := loadHints()
@@ -64,6 +79,15 @@ func main() {
 	}
 
 	if err := writeGenerated(*output, definitions); err != nil {
+		fail(err)
+	}
+
+	tests, err := buildTests(definitions)
+	if err != nil {
+		fail(err)
+	}
+
+	if err := writeGeneratedTests(*testOutput, tests); err != nil {
 		fail(err)
 	}
 }
@@ -110,6 +134,10 @@ func rubyDirectory() (string, error) {
 }
 
 func run(dir, name string, args ...string) ([]byte, error) {
+	return runInput(dir, nil, name, args...)
+}
+
+func runInput(dir string, input []byte, name string, args ...string) ([]byte, error) {
 	path, err := exec.LookPath(name)
 	if err != nil {
 		return nil, fmt.Errorf("%s is required: %w", name, err)
@@ -117,6 +145,7 @@ func run(dir, name string, args ...string) ([]byte, error) {
 
 	command := exec.Command(path, args...)
 	command.Dir = dir
+	command.Stdin = bytes.NewReader(input)
 	return command.CombinedOutput()
 }
 
@@ -175,6 +204,86 @@ func writeGenerated(path string, definitions map[string]generatedDefinition) err
 	formatted, err := format.Source(output.Bytes())
 	if err != nil {
 		return fmt.Errorf("format generated plural source: %w", err)
+	}
+
+	return os.WriteFile(path, formatted, 0o644)
+}
+
+func buildTests(definitions map[string]generatedDefinition) ([]generatedTest, error) {
+	dir, err := rubyDirectory()
+	if err != nil {
+		return nil, err
+	}
+
+	locales := make([]string, 0, len(definitions))
+	for locale := range definitions {
+		locales = append(locales, locale)
+	}
+	sort.Strings(locales)
+
+	requests := make([]pluralKeyRequest, 0)
+	for _, locale := range locales {
+		for _, hint := range definitions[locale].Hints {
+			requests = append(requests, pluralKeyRequest{Locale: locale, Hint: hint.Value})
+		}
+	}
+
+	keys, err := extractPluralKeys(dir, requests)
+	if err != nil {
+		return nil, err
+	}
+
+	tests := make([]generatedTest, len(requests))
+	for i, request := range requests {
+		tests[i] = generatedTest{Locale: request.Locale, Hint: request.Hint, Want: keys[i]}
+	}
+
+	return tests, nil
+}
+
+func extractPluralKeys(dir string, requests []pluralKeyRequest) ([]string, error) {
+	input, err := json.Marshal(requests)
+	if err != nil {
+		return nil, fmt.Errorf("encode plural key requests: %w", err)
+	}
+
+	output, err := runInput(dir, input, "bundle", "exec", "ruby", "get_key.rb")
+	if err != nil {
+		return nil, fmt.Errorf("extract plural keys: %w\n%s", err, output)
+	}
+
+	var keys []string
+	if err := json.Unmarshal(output, &keys); err != nil {
+		return nil, fmt.Errorf("decode plural keys: %w", err)
+	}
+	if len(keys) != len(requests) {
+		return nil, fmt.Errorf("extract plural keys returned %d values, want %d", len(keys), len(requests))
+	}
+
+	return keys, nil
+}
+
+func writeGeneratedTests(path string, tests []generatedTest) error {
+	tmpl, err := template.New("plurals-test").Parse(pluralsTestTemplate)
+	if err != nil {
+		return fmt.Errorf("parse plural test template: %w", err)
+	}
+
+	var output bytes.Buffer
+	err = tmpl.Execute(&output, struct {
+		Package string
+		Tests   []generatedTest
+	}{
+		Package: "translation",
+		Tests:   tests,
+	})
+	if err != nil {
+		return fmt.Errorf("render plural test template: %w", err)
+	}
+
+	formatted, err := format.Source(output.Bytes())
+	if err != nil {
+		return fmt.Errorf("format generated plural test source: %w", err)
 	}
 
 	return os.WriteFile(path, formatted, 0o644)

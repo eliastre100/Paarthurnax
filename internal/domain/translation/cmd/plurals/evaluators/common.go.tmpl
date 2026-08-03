@@ -1,0 +1,14 @@
+type Key string
+
+const (
+	Zero  Key = "zero"
+	One   Key = "one"
+	Two   Key = "two"
+	Few   Key = "few"
+	Many  Key = "many"
+	Other Key = "other"
+)
+
+func isBetween(min, max, value int) bool {
+	return min <= value && value <= max
+}

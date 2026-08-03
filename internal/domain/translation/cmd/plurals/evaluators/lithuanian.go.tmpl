@@ -1,0 +1,12 @@
+func LithuanianRule(count int) Key {
+	mod10 := count % 10
+	mod100 := count % 100
+
+	if mod10 == 1 && !isBetween(11, 19, mod100) {
+		return One
+	} else if isBetween(2, 9, mod10) && !isBetween(11, 19, mod100) {
+		return Few
+	}
+
+	return Other
+}

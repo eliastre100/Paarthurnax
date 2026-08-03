@@ -1,0 +1,88 @@
+{
+  "arabic": {
+    "zero":  0,
+    "one":   1,
+    "two":   2,
+    "few":   3,
+    "many":  11,
+    "other": 100
+  },
+  "scottish_gaelic": {
+    "one":   1,
+    "two":   2,
+    "few":   3,
+    "other": 20
+  },
+  "upper_sorbian": {
+    "one":   1,
+    "two":   2,
+    "few":   3,
+    "other": 5
+  },
+  "lithuanian": {
+    "one":   1,
+    "few":   2,
+    "other": 11
+  },
+  "latvian": {
+    "one":   1,
+    "other": 2
+  },
+  "macedonian": {
+    "one":   1,
+    "other": 2
+  },
+  "polish": {
+    "one":   1,
+    "few":   2,
+    "many":  10,
+    "other": 12
+  },
+  "slovenian": {
+    "one":   1,
+    "two":   2,
+    "few":   3,
+    "other": 5
+  },
+  "east_slavic": {
+    "one":   1,
+    "few":   2,
+    "many":  10,
+    "other": 21
+  },
+  "one_few_other": {
+    "one":   1,
+    "few":   2,
+    "other": 12
+  },
+  "one_other": {
+    "one":   1,
+    "other": 2
+  },
+  "one_two_other": {
+    "one":   1,
+    "two":   2,
+    "other": 3
+  },
+  "one_upto_two_other": {
+    "one":   1,
+    "other": 2
+  },
+  "one_with_zero_other": {
+    "one":   1,
+    "other": 2
+  },
+  "other": {
+    "other": 1
+  },
+  "romanian": {
+    "one":   1,
+    "few":   2,
+    "other": 20
+  },
+  "west_slavic": {
+    "one":   1,
+    "few":   2,
+    "other": 5
+  }
+}

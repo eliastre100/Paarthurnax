@@ -1,0 +1,11 @@
+func ScottishGaelicRule(count int) Key {
+	if count == 1 || count == 11 {
+		return One
+	} else if count == 2 || count == 12 {
+		return Two
+	} else if isBetween(3, 19, count) {
+		return Few
+	}
+
+	return Other
+}

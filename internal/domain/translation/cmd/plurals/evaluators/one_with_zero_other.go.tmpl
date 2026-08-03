@@ -1,0 +1,8 @@
+func OneWithZeroOtherRule(count int) Key {
+	switch count {
+	case 0, 1:
+		return One
+	default:
+		return Other
+	}
+}

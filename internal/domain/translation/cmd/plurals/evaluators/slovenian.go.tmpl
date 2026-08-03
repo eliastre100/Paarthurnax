@@ -1,0 +1,12 @@
+func SlovenianRule(count int) Key {
+	switch count % 100 {
+	case 1:
+		return One
+	case 2:
+		return Two
+	case 3, 4:
+		return Few
+	default:
+		return Other
+	}
+}

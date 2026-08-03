@@ -1,0 +1,14 @@
+func UpperSorbianRule(count int) Key {
+	mod100 := count % 100
+
+	switch mod100 {
+	case 1:
+		return One
+	case 2:
+		return Two
+	case 3, 4:
+		return Few
+	default:
+		return Other
+	}
+}

@@ -1,0 +1,17 @@
+func ArabicRule(count int) Key {
+	mod100 := count % 100
+
+	if count == 0 {
+		return Zero
+	} else if count == 1 {
+		return One
+	} else if count == 2 {
+		return Two
+	} else if isBetween(3, 10, mod100) {
+		return Few
+	} else if isBetween(11, 99, mod100) {
+		return Many
+	}
+
+	return Other
+}

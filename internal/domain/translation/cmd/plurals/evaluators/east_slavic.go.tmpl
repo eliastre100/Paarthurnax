@@ -1,0 +1,14 @@
+func EastSlavicRule(count int) Key {
+	mod10 := count % 10
+	mod100 := count % 100
+
+	if mod10 == 1 && mod100 != 11 {
+		return One
+	} else if isBetween(2, 4, mod10) && !isBetween(12, 14, mod100) {
+		return Few
+	} else if mod10 == 0 || isBetween(5, 9, mod10) || isBetween(11, 14, mod100) {
+		return Many
+	}
+
+	return Other
+}

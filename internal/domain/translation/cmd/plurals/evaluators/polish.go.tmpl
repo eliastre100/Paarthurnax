@@ -1,0 +1,14 @@
+func PolishRule(count int) Key {
+	mod10 := count % 10
+	mod100 := count % 100
+
+	if count == 1 {
+		return One
+	} else if isBetween(2, 4, mod10) && !isBetween(12, 14, mod100) {
+		return Few
+	} else if slices.Index([]int{0, 1, 5, 6, 7, 8, 9}, mod10) != -1 || isBetween(12, 14, mod100) {
+		return Many
+	}
+
+	return Other
+}

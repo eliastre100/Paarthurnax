@@ -1,0 +1,7 @@
+func LatvianRule(count int) Key {
+	if count%10 == 1 && count%100 != 11 {
+		return One
+	}
+
+	return Other
+}

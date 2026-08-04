@@ -28,7 +28,6 @@ func NewWorker(settings *settings.Settings, project *translation.Project, engine
 }
 
 func (w *Worker) Handle(documentChanges sync.DocumentChanges) error {
-	// Notify start working on document
 	w.reporter.StartHandlingDocument(documentChanges.Document.Name)
 	w.reporter.UpdateDocumentChanges(documentChanges.Document.Name, uint(len(documentChanges.Changes)))
 	for _, change := range documentChanges.Changes {

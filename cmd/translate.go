@@ -21,6 +21,10 @@ var TranslateCmd = &cobra.Command{
 	Long:  `Translate all the modified source segment into every other language using DeepL`,
 	Run: func(cmd *cobra.Command, args []string) {
 		deeplApiKey := os.Getenv("DEEPL_API_KEY")
+		if deeplApiKey == "" {
+			log.Fatalf("DEEPL_API_KEY environment variable not set")
+		}
+
 		loader := project.NewLoader(".")
 		documentStore := document.NewStore(".")
 		projectStateRepository := tomlproject.NewRepository(".paarthurnax")

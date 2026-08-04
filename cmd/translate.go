@@ -25,7 +25,7 @@ var TranslateCmd = &cobra.Command{
 			log.Fatalf("DEEPL_API_KEY environment variable not set")
 		}
 
-		loader := project.NewLoader(".")
+		loader := project.NewLoader("config/locales")
 		documentStore := document.NewStore(".")
 		projectStateRepository := tomlproject.NewRepository(".paarthurnax")
 

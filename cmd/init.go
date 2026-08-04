@@ -16,7 +16,7 @@ var InitCmd = &cobra.Command{
 The repository should be in a translated state as all segments will be considered translated`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectStateRepository := tomlproject.NewRepository(".paarthurnax")
-		projectLoader := project.NewLoader(".")
+		projectLoader := project.NewLoader("config/locales")
 		selector := selection.NewSelector()
 
 		err := project_initialization.Execute(projectLoader, projectStateRepository, selector)

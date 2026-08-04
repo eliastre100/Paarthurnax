@@ -27,7 +27,7 @@ var AddCmd = &cobra.Command{
 			log.Fatalf("DEEPL_API_KEY environment variable not set")
 		}
 		projectStateRepository := tomlproject.NewRepository(".paarthurnax")
-		projectLoader := project.NewLoader(".")
+		projectLoader := project.NewLoader("config/locales")
 		documentStore := document.NewStore(".")
 		selector := selection.NewSelector()
 

@@ -14,7 +14,7 @@ var NormalizeCmd = &cobra.Command{
 	Short: "Normalize the repository",
 	Long:  `Normalize all the other language to limit noise on sub-secant translations`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loader := project.NewLoader(".")
+		loader := project.NewLoader("config/locales")
 		documentStore := document.NewStore(".")
 
 		err := normalize.Execute(loader, documentStore)

@@ -24,11 +24,13 @@ var TranslateCmd = &cobra.Command{
 		loader := project.NewLoader(".")
 		documentStore := document.NewStore(".")
 		projectStateRepository := tomlproject.NewRepository(".paarthurnax")
+
 		deeplClient, err := deeplclient.NewClient(deeplApiKey, deeplclient.DeepLDomainFree)
 		if err != nil {
 			log.Fatalf("Failed to create DeepL client: %v", err)
 		}
 		engine := deepl.NewTranslator(deeplClient)
+
 		progressReporter := translate.Reporter(reporter.NewTextReporter())
 		if term.IsTerminal(os.Stdin.Fd()) && term.IsTerminal(os.Stdout.Fd()) {
 			pacmanReporter := reporter.NewPacmanReporter()

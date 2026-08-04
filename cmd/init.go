@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"Paarthurnax/internal/state"
-	"Paarthurnax/internal/state/v1"
-	"charm.land/log/v2"
+	"Paarthurnax/internal/adapters/outbound/project"
+	"Paarthurnax/internal/adapters/outbound/selection"
+	"Paarthurnax/internal/adapters/outbound/tomlproject"
+	"Paarthurnax/internal/app/project_initialization"
+
 	"github.com/spf13/cobra"
 )
 
@@ -12,17 +14,15 @@ var InitCmd = &cobra.Command{
 	Short: "Initialize the repository",
 	Long: `Initialize the repository for future use of Paarthurnax.
 The repository should be in a translated state as all segments will be considered translated`,
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Info("Generating state from disk...", "path", "config/locales")
+	RunE: func(cmd *cobra.Command, args []string) error {
+		projectStateRepository := tomlproject.NewRepository(".paarthurnax")
+		projectLoader := project.NewLoader(".")
+		selector := selection.NewSelector()
 
-		s, err := state.Generate("config/locales", "fr")
+		err := project_initialization.Execute(projectLoader, projectStateRepository, selector)
 		if err != nil {
-			log.Error(err)
+			return err
 		}
-
-		log.Info("Persisting state...", "path", v1.StateFile)
-		if err = s.Save(v1.StateFile); err != nil {
-			log.Fatal(err)
-		}
+		return nil
 	},
 }

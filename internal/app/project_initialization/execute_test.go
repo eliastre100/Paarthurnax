@@ -19,7 +19,7 @@ func TestExecute(t *testing.T) {
 			},
 		)
 		repository := &fakeProjectStateRepository{}
-		selector := &fakeSelector{selected: "en"}
+		selector := &fakeSelector{selected: translation.English.Name()}
 
 		err := Execute(&fakeProjectLoader{project: project}, repository, selector)
 
@@ -29,8 +29,8 @@ func TestExecute(t *testing.T) {
 		if selector.question != "Select the source locale" {
 			t.Errorf("selection question = %q, want Select the source locale", selector.question)
 		}
-		if !sameStrings(selector.choices, []string{"en", "fr"}) {
-			t.Errorf("selection choices = %v, want locales en and fr", selector.choices)
+		if !sameStrings(selector.choices, []string{translation.English.Name(), translation.French.Name()}) {
+			t.Errorf("selection choices = %v, want English and French locale names", selector.choices)
 		}
 		if len(repository.saved) != 1 {
 			t.Fatalf("saved states = %d, want 1", len(repository.saved))
@@ -104,7 +104,7 @@ func TestExecute(t *testing.T) {
 
 	t.Run("rejects a locale outside the project", func(t *testing.T) {
 		repository := &fakeProjectStateRepository{}
-		selector := &fakeSelector{selected: "fr"}
+		selector := &fakeSelector{selected: translation.French.Name()}
 		project := projectWithCatalogs(t, map[translation.Locale][]translation.Segment{
 			translation.English: nil,
 			translation.German:  nil,
@@ -112,7 +112,7 @@ func TestExecute(t *testing.T) {
 
 		err := Execute(&fakeProjectLoader{project: project}, repository, selector)
 
-		if err == nil || err.Error() != "fr is not a valid locale" {
+		if err == nil || err.Error() != "French (fr) is not a valid locale" {
 			t.Fatalf("Execute() error = %v, want invalid locale error", err)
 		}
 		if len(repository.saved) != 0 {
@@ -123,7 +123,7 @@ func TestExecute(t *testing.T) {
 	t.Run("returns save error after building state", func(t *testing.T) {
 		saveErr := errors.New("disk full")
 		repository := &fakeProjectStateRepository{saveErr: saveErr}
-		selector := &fakeSelector{selected: "en"}
+		selector := &fakeSelector{selected: translation.English.Name()}
 
 		err := Execute(&fakeProjectLoader{project: projectWithCatalogs(t, map[translation.Locale][]translation.Segment{translation.English: nil})}, repository, selector)
 

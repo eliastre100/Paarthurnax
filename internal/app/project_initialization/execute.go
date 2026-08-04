@@ -42,12 +42,12 @@ func Execute(loader ProjectLoader, projectStateRepository settings.ProjectStateR
 	return nil
 }
 
-func localesInProject(project *translation.Project) []string {
-	locales := make(map[string]struct{})
+func localesInProject(project *translation.Project) []translation.Locale {
+	locales := make(map[translation.Locale]struct{})
 
 	for _, document := range project.Documents {
 		for _, locale := range document.Locales() {
-			locales[string(locale)] = struct{}{}
+			locales[locale] = struct{}{}
 		}
 	}
 
@@ -57,16 +57,22 @@ func localesInProject(project *translation.Project) []string {
 func selectSourceLocale(project *translation.Project, selector Selector) (translation.Locale, error) {
 	projectLocales := localesInProject(project)
 	if len(projectLocales) == 1 {
-		return translation.Locale(projectLocales[0]), nil
+		return projectLocales[0], nil
 	}
 
-	selectedLocale, err := selector.Select("Select the source locale", projectLocales)
+	choices := make(map[string]translation.Locale)
+	for _, locale := range projectLocales {
+		choices[locale.Name()] = locale
+	}
+
+	selectedChoice, err := selector.Select("Select the source locale", slices.Collect(maps.Keys(choices)))
 	if err != nil {
 		return "", err
 	}
-	if slices.Index(projectLocales, selectedLocale) == -1 {
-		return "", fmt.Errorf("%s is not a valid locale", selectedLocale)
+	selectedLocale, ok := choices[selectedChoice]
+	if !ok {
+		return "", fmt.Errorf("%s is not a valid locale", selectedChoice)
 	}
 
-	return translation.Locale(selectedLocale), nil
+	return selectedLocale, nil
 }

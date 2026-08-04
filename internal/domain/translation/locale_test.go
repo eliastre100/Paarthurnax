@@ -97,6 +97,28 @@ func TestLocalePluralCodex(t *testing.T) {
 	}
 }
 
+func TestLocaleName(t *testing.T) {
+	t.Parallel()
+
+	if got := French.Name(); got != "French (fr)" {
+		t.Errorf("French.Name() = %q, want %q", got, "French (fr)")
+	}
+
+	if got := Locale("custom").Name(); got != "custom" {
+		t.Errorf("Locale(\"custom\").Name() = %q, want %q", got, "custom")
+	}
+
+	if len(localeNames) != len(Locales) {
+		t.Errorf("localeNames contains %d entries, want one for each of %d locales", len(localeNames), len(Locales))
+	}
+
+	for _, locale := range Locales {
+		if _, ok := localeNames[locale]; !ok {
+			t.Errorf("localeNames is missing %q", locale)
+		}
+	}
+}
+
 func TestLocalePluralCodexSupportsAllDeclaredLocalePairs(t *testing.T) {
 	t.Parallel()
 

@@ -92,13 +92,13 @@ func TestNewSegment(t *testing.T) {
 			},
 		},
 		{
-			name:  "non plural without count variable",
+			name:  "plural without count variable",
 			key:   "en.inbox.count.other",
 			value: "You have messages.",
 			expected: &Segment{
 				Key:    "en.inbox.count.other",
 				Value:  "You have messages.",
-				Plural: false,
+				Plural: true,
 				Parts: []SegmentPart{
 					TextPart{Text: "You have messages."},
 				},

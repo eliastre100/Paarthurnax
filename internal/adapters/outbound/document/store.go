@@ -63,6 +63,11 @@ func (s *Store) Delete(document string) error {
 
 func fillSegment(tree map[string]any, keyParts []string, value string) error {
 	if len(keyParts) == 1 {
+		if existing, ok := tree[keyParts[0]]; ok {
+			if _, isSubtree := existing.(map[string]any); isSubtree {
+				return fmt.Errorf("segment key %q conflicts with nested segment", keyParts[0])
+			}
+		}
 		tree[keyParts[0]] = value
 		return nil
 	}

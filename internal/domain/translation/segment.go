@@ -41,7 +41,7 @@ func NewSegment(key string, value string) *Segment {
 		Parts: parts,
 	}
 
-	segment.Plural = isPluralKey(key) && segment.HasVariable("count")
+	segment.Plural = isPluralKey(key)
 
 	return segment
 }

@@ -68,17 +68,33 @@ func (w *Worker) createDocument(document string) error {
 }
 
 func (w *Worker) RemoveSegment(documentName string, key string) error {
-	// TODO: handle plural key deletion
 	for _, locale := range w.settings.DestinationLocales {
 		document, err := w.project.GetDocumentIn(locale, documentName)
 		if err != nil {
 			return fmt.Errorf("failed to remove segment %s in document %s: %w", key, documentName, err)
 		}
-		document.RemoveSegment(key)
+		for _, targetKey := range w.removalKeys(key, locale) {
+			document.RemoveSegment(targetKey)
+		}
 	}
 
 	w.reporter.DoneDeletingSegment(documentName, key)
 	return nil
+}
+
+func (w *Worker) removalKeys(key string, locale translation.Locale) []string {
+	segment := translation.NewSegment(key, "")
+	if !segment.Plural {
+		return []string{key}
+	}
+
+	keyBase := strings.TrimSuffix(key, segment.LeafKey())
+	plurals := w.settings.SourceLocale.PluralCodex(locale)[segment.LeafKey()]
+	keys := make([]string, 0, len(plurals))
+	for _, plural := range plurals {
+		keys = append(keys, keyBase+plural.Key)
+	}
+	return keys
 }
 
 func (w *Worker) RemoveDocument(name string) error {

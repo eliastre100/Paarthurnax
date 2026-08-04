@@ -162,6 +162,41 @@ func TestWorkerUpdatePluralSegment(t *testing.T) {
 	}
 }
 
+func TestWorkerRemovePluralSegment(t *testing.T) {
+	project, source := projectWithSource(t, "locales/en/messages.json")
+	for _, locale := range testSettings().DestinationLocales {
+		document := translation.NewDocument(source.DocumentNameForLocale(locale))
+		mustSetSegment(t, document, locale, translation.Segment{Key: "inbox.messages.one", Value: "keep"})
+		mustSetSegment(t, document, locale, translation.Segment{Key: "inbox.messages.other", Value: "remove"})
+		mustSetSegment(t, document, locale, translation.Segment{Key: "inbox.messages.zero", Value: "keep"})
+		project.AddDocument(document)
+	}
+
+	worker := NewWorker(testSettings(), project, &fakeEngine{}, &fakeDocumentStore{}, &fakeReporter{})
+	if err := worker.RemoveSegment(source.Name, "inbox.messages.one"); err != nil {
+		t.Fatalf("RemoveSegment() error = %v", err)
+	}
+
+	assertSegment(t, project, "locales/fr/messages.json", translation.French, "inbox.messages.other", "remove")
+	assertSegment(t, project, "locales/ja/messages.json", translation.Japanese, "inbox.messages.one", "keep")
+	assertSegment(t, project, "locales/fr/messages.json", translation.French, "inbox.messages.zero", "keep")
+	assertSegment(t, project, "locales/ja/messages.json", translation.Japanese, "inbox.messages.zero", "keep")
+
+	for _, target := range []struct {
+		document string
+		locale   translation.Locale
+		key      string
+	}{
+		{document: "locales/fr/messages.json", locale: translation.French, key: "inbox.messages.one"},
+		{document: "locales/ja/messages.json", locale: translation.Japanese, key: "inbox.messages.other"},
+	} {
+		document, _ := project.GetDocumentIn(target.locale, source.Name)
+		if _, err := document.GetSegment(target.locale, target.key); !errors.Is(err, translation.ErrSegmentNotFound) {
+			t.Errorf("GetSegment(%s, %s) error = %v, want ErrSegmentNotFound", target.locale, target.key, err)
+		}
+	}
+}
+
 func TestWorkerHandle(t *testing.T) {
 	t.Run("processes inserts and persists every destination document", func(t *testing.T) {
 		project, source := projectWithSource(t, "locales/en/messages.json", translation.Segment{Key: "greeting", Value: "Hello"})

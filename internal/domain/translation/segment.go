@@ -94,3 +94,8 @@ func parseSegmentParts(value string) []SegmentPart {
 
 	return parts
 }
+
+func (segment *Segment) LeafKey() string {
+	parts := strings.Split(segment.Key, ".")
+	return parts[len(parts)-1]
+}

@@ -177,3 +177,47 @@ func TestSegmentHasVariable(t *testing.T) {
 		})
 	}
 }
+
+func TestSegmentLeafKey(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		key      string
+		expected string
+	}{
+		{
+			name:     "unqualified key",
+			key:      "greeting",
+			expected: "greeting",
+		},
+		{
+			name:     "nested key",
+			key:      "en.inbox.message",
+			expected: "message",
+		},
+		{
+			name:     "empty key",
+			key:      "",
+			expected: "",
+		},
+		{
+			name:     "trailing separator",
+			key:      "en.inbox.",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			segment := Segment{Key: tt.key}
+			if got := segment.LeafKey(); got != tt.expected {
+				t.Fatalf("LeafKey() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}

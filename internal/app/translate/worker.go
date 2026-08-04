@@ -6,6 +6,7 @@ import (
 	"Paarthurnax/internal/domain/translation"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type Worker struct {
@@ -108,29 +109,62 @@ func (w *Worker) UpdateSegment(documentName string, key string) error {
 		return fmt.Errorf("segment %s not found in document %s: %w", key, documentName, err)
 	}
 
-	for _, locale := range w.settings.DestinationLocales {
-		result, err := w.engine.Translate(src, w.settings.SourceLocale, locale) // TODO: inject count value for plurals & do it for every target key
+	for _, job := range w.computeTranslationJobs(src) {
+		result, err := w.engine.Translate(job.Src, w.settings.SourceLocale, job.DstLocale, job.Values...)
 		if err != nil {
-			return fmt.Errorf("failed to translate segment %s in document %s from %s to %s: %w", key, documentName, w.settings.SourceLocale, locale, err)
+			return fmt.Errorf("failed to translate segment %s in document %s from %s to %s: %w", key, documentName, w.settings.SourceLocale, job.DstLocale, err)
 		}
-		targetDocument, err := w.project.GetDocumentIn(locale, documentName)
+		targetDocument, err := w.project.GetDocumentIn(job.DstLocale, documentName)
 		if err != nil {
 			if errors.Is(err, translation.ErrDocumentNotFound) {
-				destName := document.DocumentNameForLocale(locale)
+				destName := document.DocumentNameForLocale(job.DstLocale)
 				createdDocument := translation.NewDocument(destName)
 				targetDocument = createdDocument
 				w.project.AddDocument(targetDocument)
 			} else {
-				return fmt.Errorf("failed to locate destination document for segment %s in document %s and locale %s: %w", key, documentName, locale, err)
+				return fmt.Errorf("failed to locate destination document for segment %s in document %s and locale %s: %w", key, documentName, job.DstLocale, err)
 			}
 		}
-		if err := targetDocument.SetSegment(locale, result); err != nil {
+		if err := targetDocument.SetSegment(job.DstLocale, result); err != nil {
 			return fmt.Errorf("failed to set segment %s in document %s: %w", key, targetDocument.Name, err)
 		}
 	}
 
 	w.reporter.DoneUpdatingSegment(documentName, key)
 	return nil
+}
+
+type TranslationJob struct {
+	Src       translation.Segment
+	DstLocale translation.Locale
+	Values    []SegmentValue
+}
+
+func (w *Worker) computeTranslationJobs(segment translation.Segment) []TranslationJob {
+	jobs := make([]TranslationJob, 0)
+
+	for _, locale := range w.settings.DestinationLocales {
+		if !segment.Plural {
+			jobs = append(jobs, TranslationJob{Src: segment, DstLocale: locale, Values: []SegmentValue{}})
+			continue
+		}
+
+		leafKey := segment.LeafKey()
+		codex := w.settings.SourceLocale.PluralCodex(locale)
+		keyParts := strings.Split(segment.Key, ".")
+		keyBase := strings.Join(keyParts[:len(keyParts)-1], ".") + "."
+
+		for _, plural := range codex[leafKey] {
+			sourceSegment := translation.NewSegment(keyBase+plural.Key, segment.Value)
+			jobs = append(jobs, TranslationJob{Src: *sourceSegment, DstLocale: locale, Values: []SegmentValue{
+				{
+					Name:  "count",
+					Value: plural.Hint,
+				},
+			}})
+		}
+	}
+	return jobs
 }
 
 func (w *Worker) persistChanges(name string) error {

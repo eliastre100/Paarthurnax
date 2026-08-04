@@ -102,6 +102,66 @@ func TestWorkerUpdateSegment(t *testing.T) {
 	})
 }
 
+func TestWorkerUpdatePluralSegment(t *testing.T) {
+	tests := []struct {
+		name          string
+		source        translation.Segment
+		wantCalls     []pluralTranslationCall
+		wantSegments  []pluralTargetSegment
+		absentSegment *pluralTargetSegment
+	}{
+		{
+			name:   "expands one form for every matching destination form",
+			source: *translation.NewSegment("inbox.messages.one", "%{count} message"),
+			wantCalls: []pluralTranslationCall{
+				{key: "inbox.messages.one", locale: translation.French, values: []SegmentValue{{Name: "count", Value: "1"}}},
+				{key: "inbox.messages.other", locale: translation.Japanese, values: []SegmentValue{{Name: "count", Value: "1"}}},
+			},
+			wantSegments: []pluralTargetSegment{
+				{document: "locales/fr/messages.json", locale: translation.French, key: "inbox.messages.one"},
+				{document: "locales/ja/messages.json", locale: translation.Japanese, key: "inbox.messages.other"},
+			},
+		},
+		{
+			name:   "skips destinations without a matching plural form",
+			source: *translation.NewSegment("inbox.messages.other", "%{count} messages"),
+			wantCalls: []pluralTranslationCall{
+				{key: "inbox.messages.other", locale: translation.French, values: []SegmentValue{{Name: "count", Value: "2"}}},
+			},
+			wantSegments: []pluralTargetSegment{
+				{document: "locales/fr/messages.json", locale: translation.French, key: "inbox.messages.other"},
+			},
+			absentSegment: &pluralTargetSegment{document: "locales/ja/messages.json", locale: translation.Japanese, key: "inbox.messages.other"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			project, source := projectWithSource(t, "locales/en/messages.json", tt.source)
+			engine := &pluralRecordingEngine{}
+			worker := NewWorker(testSettings(), project, engine, &fakeDocumentStore{}, &fakeReporter{})
+
+			if err := worker.UpdateSegment(source.Name, tt.source.Key); err != nil {
+				t.Fatalf("UpdateSegment() error = %v", err)
+			}
+
+			if !reflect.DeepEqual(engine.calls, tt.wantCalls) {
+				t.Errorf("translation calls = %#v, want %#v", engine.calls, tt.wantCalls)
+			}
+			for _, want := range tt.wantSegments {
+				assertSegment(t, project, want.document, want.locale, want.key, tt.source.Value+" in "+want.locale.String())
+			}
+			if tt.absentSegment != nil {
+				if _, ok := project.Documents[tt.absentSegment.document]; ok {
+					t.Errorf("unexpected destination document %q", tt.absentSegment.document)
+				}
+			}
+		})
+	}
+}
+
 func TestWorkerHandle(t *testing.T) {
 	t.Run("processes inserts and persists every destination document", func(t *testing.T) {
 		project, source := projectWithSource(t, "locales/en/messages.json", translation.Segment{Key: "greeting", Value: "Hello"})
@@ -327,4 +387,25 @@ func documentNames(documents []*translation.Document) []string {
 		names[index] = document.Name
 	}
 	return names
+}
+
+type pluralTranslationCall struct {
+	key    string
+	locale translation.Locale
+	values []SegmentValue
+}
+
+type pluralTargetSegment struct {
+	document string
+	locale   translation.Locale
+	key      string
+}
+
+type pluralRecordingEngine struct {
+	calls []pluralTranslationCall
+}
+
+func (e *pluralRecordingEngine) Translate(segment translation.Segment, _ translation.Locale, locale translation.Locale, values ...SegmentValue) (translation.Segment, error) {
+	e.calls = append(e.calls, pluralTranslationCall{key: segment.Key, locale: locale, values: values})
+	return translatedSegment(segment, locale)
 }

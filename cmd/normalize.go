@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"Paarthurnax/internal/state"
-	"Paarthurnax/internal/translation"
-	"Paarthurnax/internal/translationgroup"
+	"Paarthurnax/internal/adapters/outbound/document"
+	"Paarthurnax/internal/adapters/outbound/project"
+	"Paarthurnax/internal/app/normalize"
+
 	"charm.land/log/v2"
-	"fmt"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 var NormalizeCmd = &cobra.Command{
@@ -15,28 +14,12 @@ var NormalizeCmd = &cobra.Command{
 	Short: "Normalize the repository",
 	Long:  `Normalize all the other language to limit noise on sub-secant translations`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Info("Loading current state from disk...")
-		nState, err := state.Generate("config/locales", "fr")
+		loader := project.NewLoader(".")
+		documentStore := document.NewStore(".")
+
+		err := normalize.Execute(loader, documentStore)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("%v", err)
 		}
-
-		log.Info("Normalizing translations...")
-		for _, nFile := range nState.Files {
-			log.Info(fmt.Sprintf("Processing %s...", nFile.Path))
-
-			for _, locale := range translationgroup.DestLocales {
-				path := strings.Replace(nFile.Path, "fr.yml", locale+".yml", 1)
-				file, err := translation.LoadOrCreate(path)
-				if err != nil {
-					log.Fatal(fmt.Sprintf("%s: %s", path, err.Error()))
-				}
-				if err = file.Save(); err != nil {
-					log.Fatal(err)
-				}
-			}
-		}
-
-		log.Info("Done!")
 	},
 }

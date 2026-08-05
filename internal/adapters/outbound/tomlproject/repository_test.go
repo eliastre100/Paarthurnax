@@ -30,12 +30,12 @@ func TestRepositoryLoadErrors(t *testing.T) {
 
 	t.Run("unsupported version", func(t *testing.T) {
 		path := filepath.Join(t.TempDir(), ".paarthurnax")
-		if err := os.WriteFile(path, []byte("version = 2\n"), 0o644); err != nil {
+		if err := os.WriteFile(path, []byte("version = 3\n"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
 		_, err := NewRepository(path).Load()
-		if err == nil || !strings.Contains(err.Error(), "unsupported project state version: 2") {
+		if err == nil || !strings.Contains(err.Error(), "unsupported project state version: 3") {
 			t.Errorf("Load() error = %v, want unsupported version error", err)
 		}
 	})

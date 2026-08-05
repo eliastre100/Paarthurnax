@@ -35,7 +35,7 @@ func loadV0(data []byte) (*settings.ProjectState, error) {
 		Settings: &settings.Settings{
 			SourceLocale: translation.French,
 			DestinationLocales: []translation.Locale{
-				"es", translation.English, "de", "it", "hu", "uk", "pl", "pt", "ro",
+				translation.Spanish, translation.English, translation.German, translation.Italian, translation.Hungarian, translation.Ukrainian, translation.Polish, translation.Portuguese, translation.Romanian,
 			},
 		},
 		Snapshot: snapshot,

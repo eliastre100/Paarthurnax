@@ -9,11 +9,12 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-const currentVersion = 1
+const currentVersion = 2
 
 var versionLoaders = map[int]func([]byte) (*settings.ProjectState, error){
 	0: loadV0,
 	1: loadV1,
+	2: loadV2,
 }
 
 type Repository struct {
@@ -25,7 +26,7 @@ func NewRepository(path string) *Repository {
 }
 
 func (r *Repository) Save(state *settings.ProjectState) error {
-	persisted, err := encodeV1(state)
+	persisted, err := encodeV2(state)
 	if err != nil {
 		return err
 	}

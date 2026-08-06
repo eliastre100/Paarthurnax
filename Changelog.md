@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Locale configuration is now saved in `.paarthurnax`. 
 - Projects can use any supported source locale instead of relying on a fixed source language and destination-language list.
+- The project is now under an AGPL-3 license 
 
 ### Fixed
 

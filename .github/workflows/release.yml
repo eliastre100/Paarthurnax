@@ -44,6 +44,7 @@ jobs:
           CGO_ENABLED=0 go build -trimpath \
             -ldflags "-s -w -X Paarthurnax/cmd.Version=${{ github.event.release.tag_name }} -X Paarthurnax/cmd.Commit=${{ github.sha }} -X Paarthurnax/cmd.BuildDate=${build_date}" \
             -o "$asset" .
+          sha256sum "$asset" > "${asset}.sha256"
       - name: Upload release asset
         env:
           GH_TOKEN: ${{ github.token }}

@@ -62,9 +62,9 @@ manage.
    paarthurnax locales add
    ```
 
-   Choose a locale from the interactive prompt. Paarthurnax translates all
-   existing source strings and creates or fills the corresponding destination
-   locale files.
+   Choose a locale from the interactive prompt. Paarthurnax translates the
+   source strings captured by the most recent `init` or `translate` and creates
+   or fills the corresponding destination locale files.
 
 3. After adding, changing, or removing source strings, run:
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-06
+
 ### Added
 
 - The `init` command lets you choose the source locale when a project contains more than one locale.
@@ -36,5 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - translate command translate all untranslated segments with deepl
 - normalize command sort all destination files segments in order to limit noise after translation
 
-[unreleased]: https://github.com/eliastre100/Paarthurnax/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/eliastre100/Paarthurnax/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/eliastre100/Paarthurnax/releases/tag/v1.0.0
 [0.1.0]: https://github.com/eliastre100/Paarthurnax/releases/tag/v0.1.0

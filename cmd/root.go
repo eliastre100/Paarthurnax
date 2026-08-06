@@ -2,9 +2,17 @@ package cmd
 
 import (
 	"Paarthurnax/cmd/locales"
+	"fmt"
 
 	"charm.land/log/v2"
 	"github.com/spf13/cobra"
+)
+
+// These values are replaced by release builds through -ldflags.
+var (
+	Version   = "devel"
+	Commit    = "none"
+	BuildDate = "unknown"
 )
 
 var RootCmd = &cobra.Command{
@@ -12,9 +20,7 @@ var RootCmd = &cobra.Command{
 	Short: "Paarthurnax is a simple translation tool for Rails projects",
 	Long: `A simple and quick translation tool for in place
 translation of Rails project`,
-	Run: func(cmd *cobra.Command, args []string) {
-		println("Paarthurnax version 0.1")
-	},
+	Version: versionInfo(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
 			log.SetLevel(log.DebugLevel)
@@ -29,4 +35,8 @@ func init() {
 	RootCmd.AddCommand(TranslateCmd)
 	RootCmd.AddCommand(NormalizeCmd)
 	RootCmd.AddCommand(locales.LocalesCmd)
+}
+
+func versionInfo() string {
+	return fmt.Sprintf("%s (commit %s, built %s)", Version, Commit, BuildDate)
 }

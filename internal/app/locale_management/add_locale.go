@@ -37,8 +37,6 @@ func AddLocale(projectStateRepository settings.ProjectStateRepository, projectLo
 		return fmt.Errorf("could not process missing translations: %w", err)
 	}
 
-	// TODO: translate segments missing in the new destination compared to the state
-
 	if err := projectStateRepository.Save(state); err != nil {
 		return fmt.Errorf("could not save project state: %w", err)
 	}

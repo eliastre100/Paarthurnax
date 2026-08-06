@@ -9,12 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Report the DeepL underlying error on translation request failure
+- The `init` command lets you choose the source locale when a project contains more than one locale.
+- Add destination languages interactively with `paarthurnax locales add`. 
+- Translate missing segments on language addition
+- Show translation progress in a more transparent way
+- Report the underlying DeepL error when a translation request fails.
+
+### Changed
+
+- Locale configuration is now saved in `.paarthurnax`. 
+- Projects can use any supported source locale instead of relying on a fixed source language and destination-language list.
 
 ### Fixed
 
-- DeepL 529 response in case of too many requests does not fail and retry with backoff
-- DeepL request no longer set Content-Type with an empty body
+- Remove every destination plural form when its source plural key is deleted.
+- Retry DeepL 429 (too many requests) responses with backoff instead of failing immediately.
+- No longer send an empty `Content-Type` header in DeepL requests.
 - The plural translations no longer have a chance to fail the parameter sanity check by translating the count hint
 
 ## [0.1.0] - 2024-09-17
